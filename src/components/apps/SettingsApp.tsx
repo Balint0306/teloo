@@ -16,10 +16,16 @@ const WALLPAPERS = [
 
 const SettingsApp: React.FC<{ user: any; profile: any; onClose: () => void }> = ({ user, profile, onClose }) => {
   const [isUpdating, setIsUpdating] = useState(false);
-  const [photoUrl, setPhotoUrl] = useState(user?.photoURL || '');
+  const [photoUrl, setPhotoUrl] = useState(profile?.settings?.photoURL || user?.photoURL || '');
   const [showWallpaperPicker, setShowWallpaperPicker] = useState(false);
   const [showAccountDetails, setShowAccountDetails] = useState(false);
   const [displayName, setDisplayName] = useState(profile?.settings?.displayName || user?.displayName || user?.email?.split('@')[0] || '');
+
+  // Keep local editing states in sync with actual profile data
+  React.useEffect(() => {
+    if (profile?.settings?.photoURL) setPhotoUrl(profile.settings.photoURL);
+    if (profile?.settings?.displayName) setDisplayName(profile.settings.displayName);
+  }, [profile]);
 
   const handleUpdateProfile = async () => {
     setIsUpdating(true);
@@ -92,6 +98,13 @@ const SettingsApp: React.FC<{ user: any; profile: any; onClose: () => void }> = 
     } catch (error) {
       console.error(error);
       alert('Hiba történt a háttérkép mentésekor.');
+    }
+  };
+
+  const handleCustomWallpaper = () => {
+    const url = prompt('Add meg a saját háttérkép URL-jét:', profile?.settings?.wallpaper);
+    if (url) {
+      handleWallpaperChange(url);
     }
   };
 
@@ -268,24 +281,40 @@ const SettingsApp: React.FC<{ user: any; profile: any; onClose: () => void }> = 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed inset-0 z-[120] bg-white flex flex-col pt-12"
           >
-            <div className="p-6 flex items-center justify-between border-b border-zinc-100">
+            <div className="flex-none p-6 pt-12 flex items-center justify-between border-b border-zinc-100 bg-white shadow-sm z-10 relative">
               <h2 className="text-2xl font-bold">Háttérképek</h2>
-              <button 
-                onClick={() => setShowWallpaperPicker(false)}
-                className="text-blue-600 font-bold"
-              >
-                Mégse
-              </button>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={handleCustomWallpaper}
+                  className="bg-zinc-100 text-zinc-900 px-4 py-2 rounded-xl text-sm font-bold hover:bg-zinc-200"
+                >
+                  Saját URL
+                </button>
+                <button 
+                  onClick={() => setShowWallpaperPicker(false)}
+                  className="text-blue-600 font-bold"
+                >
+                  Mégse
+                </button>
+              </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-6 grid grid-cols-2 gap-4 no-scrollbar pb-20">
+            <div className="flex-1 overflow-y-auto p-4 pt-6 grid grid-cols-2 gap-4 no-scrollbar pb-40">
               {WALLPAPERS.map((url, i) => (
                 <motion.button
                   key={i}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleWallpaperChange(url)}
-                  className="aspect-[9/16] rounded-3xl overflow-hidden relative shadow-lg group border-2 border-transparent hover:border-blue-500 transition-all"
+                  className="h-72 rounded-3xl overflow-hidden relative shadow-md group border-2 border-transparent hover:border-blue-500 transition-all bg-zinc-50"
                 >
-                  <img src={url} className="w-full h-full object-cover" alt={`w-${i}`} />
+                  <img 
+                    src={url} 
+                    className="w-full h-full object-cover" 
+                    alt={`w-${i}`}
+                    loading="lazy"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1000';
+                    }}
+                  />
                   {profile?.settings?.wallpaper === url && (
                     <div className="absolute inset-0 bg-blue-600/20 flex items-center justify-center">
                       <div className="bg-blue-600 text-white p-2 rounded-full shadow-lg">

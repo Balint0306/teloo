@@ -15,7 +15,9 @@
           "type": "object",
           "properties": {
             "wallpaper": { "type": "string" },
-            "theme": { "type": "string", "enum": ["light", "dark"] }
+            "theme": { "type": "string", "enum": ["light", "dark"] },
+            "photoURL": { "type": "string" },
+            "displayName": { "type": "string" }
           }
         },
         "updatedAt": { "type": "string", "format": "date-time" }

@@ -14,6 +14,8 @@ export interface UserProfile {
   settings: {
     wallpaper: string;
     theme: 'light' | 'dark';
+    photoURL?: string;
+    displayName?: string;
   };
 }
 

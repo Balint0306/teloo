@@ -34,7 +34,7 @@ const StatusBar = ({ isAppActive }: { isAppActive: boolean }) => {
   }, []);
 
   return (
-    <div className={`fixed top-0 left-0 right-0 z-[100] px-6 pt-3 pb-4 flex items-center justify-between transition-all duration-500 bg-gradient-to-b from-black/40 to-transparent pointer-events-none`}>
+    <div className={`fixed top-0 left-0 right-0 z-[100] px-6 pt-1 pb-4 flex items-center justify-between transition-all duration-500 bg-gradient-to-b from-black/40 to-transparent pointer-events-none`}>
       <div className="text-white text-[12px] font-bold tracking-tight">
         {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
       </div>
@@ -75,46 +75,72 @@ export default function App() {
   const [authError, setAuthError] = useState('');
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (u) => {
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
-      if (u) {
-        const userRef = doc(db, 'users', u.uid);
-        try {
-          const userDoc = await getDoc(userRef);
-          
-          if (!userDoc.exists()) {
-            const newProfile: UserProfile = {
-              uid: u.uid,
-              email: u.email || '',
-              installedAppIds: [],
-              settings: {
-                wallpaper: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1000',
-                theme: 'dark'
-              }
-            };
-            await setDoc(userRef, newProfile);
-            setProfile(newProfile);
-          } else {
-            setProfile(userDoc.data() as UserProfile);
-          }
-        } catch (error) {
-          handleFirestoreError(error, OperationType.GET, `users/${u.uid}`);
-        }
-
-        const unsubDoc = onSnapshot(userRef, (doc) => {
-          if (doc.exists()) setProfile(doc.data() as UserProfile);
-        }, (error) => {
-          handleFirestoreError(error, OperationType.GET, `users/${u.uid}`);
-        });
-        setLoading(false);
-        return () => unsubDoc();
-      } else {
+      if (!u) {
         setProfile(null);
         setLoading(false);
       }
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    let unsubProfile: (() => void) | undefined;
+    const userRef = doc(db, 'users', user.uid);
+
+    const initProfile = async () => {
+      try {
+        const userDoc = await getDoc(userRef);
+        
+        if (!userDoc.exists()) {
+          const newProfile: UserProfile = {
+            uid: user.uid,
+            email: user.email || '',
+            installedAppIds: [],
+            settings: {
+              wallpaper: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1000',
+              theme: 'dark',
+              photoURL: user.photoURL || 'https://i.pravatar.cc/100',
+              displayName: user.displayName || user.email?.split('@')[0] || 'Felhasználó'
+            }
+          };
+          await setDoc(userRef, newProfile);
+          setProfile(newProfile);
+        } else {
+          const existingProfile = userDoc.data() as UserProfile;
+          setProfile(existingProfile);
+
+          // Migration: Backfill missing settings if they don't exist
+          if (!existingProfile.settings?.photoURL || !existingProfile.settings?.displayName) {
+            await updateDoc(userRef, {
+              'settings.photoURL': existingProfile.settings?.photoURL || user.photoURL || 'https://i.pravatar.cc/100',
+              'settings.displayName': existingProfile.settings?.displayName || user.displayName || user.email?.split('@')[0] || 'Felhasználó'
+            });
+          }
+        }
+
+        unsubProfile = onSnapshot(userRef, (doc) => {
+          if (doc.exists()) setProfile(doc.data() as UserProfile);
+        }, (error) => {
+          handleFirestoreError(error, OperationType.GET, `users/${user.uid}`);
+        });
+
+      } catch (error) {
+        handleFirestoreError(error, OperationType.GET, `users/${user.uid}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initProfile();
+
+    return () => {
+      if (unsubProfile) unsubProfile();
+    };
+  }, [user]);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -178,13 +204,18 @@ export default function App() {
 
   const isAppActive = !!activeApp || showPlayStore;
 
+  // Determine if the current screen is "light" themed to change the home indicator color
+  const isLightTheme = activeApp?.id === 'settings' || showPlayStore;
+  const homeIndicatorColor = isLightTheme ? 'bg-black/40' : 'bg-white/30';
+  const dockIconColor = isLightTheme ? 'text-zinc-500' : 'text-white/40';
+
   return (
     <div className="min-h-[100dvh] bg-[#0a0a0a] flex flex-col font-sans selection:bg-blue-200 overflow-hidden text-white">
       {/* Dynamic Background */}
       <div 
         className="fixed inset-0 z-0 transition-all duration-1000 ease-in-out scale-105"
         style={{
-          backgroundImage: `url(${profile?.settings.wallpaper})`,
+          backgroundImage: `url(${profile?.settings?.wallpaper || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1000'})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           filter: isAppActive ? 'blur(0px) brightness(1.15)' : 'blur(0px)'
@@ -316,7 +347,7 @@ export default function App() {
                         <span className="font-bold text-xl md:text-2xl text-zinc-900">{activeApp.name}</span>
                       </div>
                       <div className="w-10 h-10 rounded-full overflow-hidden border border-zinc-100">
-                        <img src={user.photoURL || 'https://i.pravatar.cc/100'} alt="me" className="w-full h-full object-cover" />
+                        <img src={profile?.settings?.photoURL || user.photoURL || 'https://i.pravatar.cc/100'} alt="me" className="w-full h-full object-cover" />
                       </div>
                     </div>
                     <div className="flex-1 p-8 flex flex-col items-center justify-center text-center max-w-xl mx-auto">
@@ -355,7 +386,7 @@ export default function App() {
                       <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Play Áruház</h1>
                     </div>
                     <button className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-lg ring-1 ring-zinc-200" onClick={signOut}>
-                      <img src={user.photoURL || 'https://i.pravatar.cc/100'} alt="profile" />
+                      <img src={profile?.settings?.photoURL || user.photoURL || 'https://i.pravatar.cc/100'} alt="profile" />
                     </button>
                   </div>
                   <div className="bg-zinc-100 rounded-2xl flex items-center px-5 py-3.5 gap-4">
@@ -405,20 +436,20 @@ export default function App() {
                 className="flex-1 flex flex-col p-6 md:p-12 h-full relative"
               >
                 <div className="relative z-10 flex flex-col h-full bg-transparent">
-                  <div className="flex-1 mt-24 md:mt-28 bg-transparent overflow-y-auto no-scrollbar">
-                    <div className="max-w-5xl mx-auto">
-                      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-9 gap-x-4 gap-y-12">
+                  <div className="flex-1 mt-24 md:mt-28 bg-transparent overflow-y-auto no-scrollbar pb-32">
+                    <div className="max-w-5xl mx-auto px-4">
+                      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-x-4 gap-y-10 focus:outline-none">
                         <motion.div 
                           whileHover={{ y: -3 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => setShowPlayStore(true)}
                           className="flex flex-col items-center gap-2 cursor-pointer group"
                         >
-                          <div className="w-[50px] h-[50px] md:w-[60px] md:h-[60px] bg-white rounded-xl md:rounded-[22px] flex items-center justify-center shadow-lg ring-1 ring-white/10 relative">
-                            <ShoppingBag className="text-blue-500" size={28} strokeWidth={2.5} />
-                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-zinc-900" />
+                          <div className="w-[54px] h-[54px] md:w-[64px] md:h-[64px] bg-white rounded-2xl md:rounded-[24px] flex items-center justify-center shadow-lg ring-1 ring-white/10 relative">
+                            <ShoppingBag className="text-blue-500" size={30} strokeWidth={2.5} />
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-zinc-900" />
                           </div>
-                          <span className="text-[10px] md:text-[11px] text-white font-bold text-shadow text-center">Áruház</span>
+                          <span className="text-[11px] md:text-[12px] text-white font-medium text-shadow text-center">Áruház</span>
                         </motion.div>
 
                         {allVisibleApps.map(app => (
@@ -431,43 +462,15 @@ export default function App() {
                           >
                             <motion.div 
                               layoutId={`app-icon-${app.id}`}
-                              className={`w-[50px] h-[50px] md:w-[60px] md:h-[60px] ${app.color} rounded-xl md:rounded-[22px] flex items-center justify-center shadow-lg ring-1 ring-white/10`}
+                              className={`w-[54px] h-[54px] md:w-[64px] md:h-[64px] ${app.color} rounded-2xl md:rounded-[24px] flex items-center justify-center shadow-lg ring-1 ring-white/10`}
                             >
-                              <Icon name={app.icon} size={28} />
+                              <Icon name={app.icon} size={30} />
                             </motion.div>
-                            <span className="text-[10px] md:text-[11px] text-white font-bold text-shadow text-center truncate w-full px-1">{app.name}</span>
+                            <span className="text-[11px] md:text-[12px] text-white font-medium text-shadow text-center truncate w-full px-1">{app.name}</span>
                           </motion.div>
                         ))}
                       </div>
                     </div>
-                  </div>
-
-                  <div className="mb-4 pt-6 flex justify-center">
-                    <motion.div 
-                      key="dock"
-                      initial={{ y: 40, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                      className="bg-black/30 backdrop-blur-3xl rounded-[28px] px-5 py-2.5 flex justify-center items-center gap-5 border border-white/10 shadow-2xl w-fit"
-                    >
-                      <motion.div whileTap={{ scale: 0.85 }} className="w-11 h-11 md:w-13 md:h-13 bg-green-500 rounded-xl md:rounded-[20px] flex items-center justify-center shadow-lg cursor-pointer">
-                        <Globe className="text-white" size={24} />
-                      </motion.div>
-                      <motion.div whileTap={{ scale: 0.85 }} className="w-11 h-11 md:w-13 md:h-13 bg-[#1877F2] rounded-xl md:rounded-[20px] flex items-center justify-center shadow-lg cursor-pointer">
-                        <FacebookIcon className="text-white" size={24} />
-                      </motion.div>
-                      <motion.div 
-                        whileTap={{ scale: 0.85 }} 
-                        className="w-11 h-11 md:w-13 md:h-13 bg-zinc-800 rounded-xl md:rounded-[20px] flex items-center justify-center shadow-lg cursor-pointer overflow-hidden border border-white/10"
-                        onClick={() => setActiveApp(SYSTEM_APPS.find(a => a.id === 'settings') || null)}
-                      >
-                        {profile?.settings?.photoURL ? (
-                          <img src={profile.settings.photoURL} className="w-full h-full object-cover" alt="p" />
-                        ) : (
-                          <UserIcon className="text-white" size={22} />
-                        )}
-                      </motion.div>
-                    </motion.div>
                   </div>
                 </div>
               </motion.div>
@@ -475,37 +478,61 @@ export default function App() {
           </AnimatePresence>
         </div>
 
-        {/* Home Bar Indicator & Navigation */}
-        <div className={`fixed bottom-0 left-0 right-0 h-6 md:h-10 flex justify-center items-end pb-1 md:pb-2 z-[70] transition-all duration-500 bg-gradient-to-t from-black/5 to-transparent pointer-events-none`}>
-          <div className="relative w-full max-w-sm flex items-center justify-center gap-12 pointer-events-auto">
+        {/* Unified Navigation Dock & Home Bar Indicator */}
+        <div className="fixed bottom-0 left-0 right-0 z-[70] flex flex-col items-center pb-4 md:pb-6 pointer-events-none">
+          <AnimatePresence>
             {!isAppActive && (
-               <div className="hidden md:flex bg-black/10 backdrop-blur-3xl rounded-full px-6 py-2 items-center gap-6 border border-white/5 shadow-2xl mb-8">
-                <Globe size={20} className="text-white/40 cursor-pointer hover:text-white transition-colors" />
-                <div className="w-[1px] h-4 bg-white/10" />
-                <FacebookIcon size={20} className="text-white/40 cursor-pointer hover:text-white transition-colors" />
-                <div className="w-[1px] h-4 bg-white/10" />
-                <div 
-                  className="w-8 h-8 rounded-full overflow-hidden border border-white/10 cursor-pointer"
-                  onClick={() => setActiveApp(SYSTEM_APPS.find(a => a.id === 'settings') || null)}
-                >
-                  {profile?.settings?.photoURL ? (
-                    <img src={profile.settings.photoURL} className="w-full h-full object-cover" alt="p" />
-                  ) : (
-                    <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
-                      <UserIcon size={16} />
-                    </div>
-                  )}
+              <motion.div 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 40, opacity: 0 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="pointer-events-auto mb-6"
+              >
+                <div className="bg-black/20 backdrop-blur-3xl rounded-[36px] px-6 py-4 flex items-center gap-6 border border-white/10 shadow-2xl relative">
+                  <div className="absolute inset-0 bg-white/5 rounded-[36px] -z-10" />
+                  <motion.div 
+                    whileHover={{ y: -5 }}
+                    whileTap={{ scale: 0.8 }} 
+                    className="w-12 h-12 md:w-14 md:h-14 bg-green-500 rounded-[22px] flex items-center justify-center shadow-lg cursor-pointer transition-transform"
+                  >
+                    <Globe className="text-white" size={26} />
+                  </motion.div>
+                  <motion.div 
+                    whileHover={{ y: -5 }}
+                    whileTap={{ scale: 0.8 }} 
+                    className="w-12 h-12 md:w-14 md:h-14 bg-[#1877F2] rounded-[22px] flex items-center justify-center shadow-lg cursor-pointer transition-transform"
+                  >
+                    <FacebookIcon className="text-white" size={26} />
+                  </motion.div>
+                  <motion.div 
+                    whileHover={{ y: -5 }}
+                    whileTap={{ scale: 0.8 }} 
+                    className="w-12 h-12 md:w-14 md:h-14 bg-zinc-800 rounded-[22px] flex items-center justify-center shadow-lg cursor-pointer overflow-hidden border border-white/10 transition-transform"
+                    onClick={() => setActiveApp(SYSTEM_APPS.find(a => a.id === 'settings') || null)}
+                  >
+                    {profile?.settings?.photoURL ? (
+                      <img src={profile.settings.photoURL} className="w-full h-full object-cover" alt="p" />
+                    ) : (
+                      <UserIcon className="text-white" size={24} />
+                    )}
+                  </motion.div>
                 </div>
-              </div>
+              </motion.div>
             )}
-            
+          </AnimatePresence>
+          
+          <div 
+            className="w-full max-w-sm flex justify-center pointer-events-auto py-2 group cursor-pointer"
+            onClick={() => {
+              setActiveApp(null);
+              setShowPlayStore(false);
+            }}
+          >
             <motion.div 
-               whileTap={{ scale: 0.9 }}
-               onClick={() => {
-                 setActiveApp(null);
-                 setShowPlayStore(false);
-               }}
-               className="w-14 md:w-20 h-1 bg-white/25 rounded-full cursor-pointer hover:bg-white/50 transition-colors"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              className={`w-28 md:w-32 h-[6px] ${homeIndicatorColor} rounded-full backdrop-blur-sm transition-all duration-300 shadow-sm`}
             />
           </div>
         </div>
