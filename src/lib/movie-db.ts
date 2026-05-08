@@ -273,7 +273,7 @@ export const movieDB: Content[] = [
     genres: [GENRES.ACTION, GENRES.DRAMA],
     cast: ['Tom Cruise', 'Miles Teller', 'Jennifer Connelly'],
     trailerUrl: 'https://youtu.be/HqsagXiW3WI?si=k387RTuXwqlOnnyW',
-    embedUrl: 'https://vkvideo.ru/video-229871314_456239019?list=ln-Kg4Oxr70ZIDiZKLuG8'
+    embedUrl: 'https://vkvideo.ru/video_ext.php?oid=-229871314&id=456239019&hash=384c664e615cb4e7&hd=3&autoplay=1'
   },
   {
     id: '11',
