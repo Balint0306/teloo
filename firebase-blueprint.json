@@ -1,0 +1,48 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Represents a virtual phone user and their system state.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "installedAppIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "settings": {
+          "type": "object",
+          "properties": {
+            "wallpaper": { "type": "string" },
+            "theme": { "type": "string", "enum": ["light", "dark"] }
+          }
+        },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "installedAppIds"]
+    },
+    "UserAppData": {
+      "title": "App Data",
+      "description": "User-specific data stored within a virtual application.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "appId": { "type": "string" },
+        "content": { "type": "object" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "appId", "content"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile and system settings."
+    },
+    "/users/{userId}/appData/{appId}": {
+      "schema": "UserAppData",
+      "description": "Private data for specific apps."
+    }
+  }
+}
