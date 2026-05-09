@@ -2,6 +2,8 @@ export interface Episode {
   episode: number;
   title: string;
   duration: string;
+  durationSeconds?: number;
+  upNextTriggerSeconds?: number;
   description: string;
   thumbnailUrl: string;
   embedUrl: string;
@@ -21,6 +23,8 @@ export interface Content {
   description: string;
   year: number;
   duration: string;
+  durationSeconds?: number;
+  upNextTriggerSeconds?: number;
   genres: string[];
   cast: string[];
   embedUrl?: string; // for movies

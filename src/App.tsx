@@ -22,7 +22,6 @@ import { doc, getDoc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { UserProfile, AppInfo, SYSTEM_APPS, AVAILABLE_APPS } from './types';
 import { handleFirestoreError, OperationType } from './lib/firestoreErrorHandler';
 import NetflixApp from './components/apps/NetflixApp';
-import Netflix2App from './components/apps/Netflix2App';
 import SettingsApp from './components/apps/SettingsApp';
 
 // Components
@@ -337,12 +336,6 @@ export default function App() {
               >
                 {activeApp.id === 'netflix' ? (
                   <NetflixApp 
-                    onClose={() => { setActiveApp(null); setIsHomeBarHidden(false); }} 
-                    user={user} 
-                    onPlaybackChange={setIsHomeBarHidden}
-                  />
-                ) : activeApp.id === 'netflix2' ? (
-                  <Netflix2App 
                     onClose={() => { setActiveApp(null); setIsHomeBarHidden(false); }} 
                     user={user} 
                     onPlaybackChange={setIsHomeBarHidden}

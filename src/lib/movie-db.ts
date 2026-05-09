@@ -34,7 +34,9 @@ export const movieDB: Content[] = [
             episode: 1,
             title: '1. epizód',
             duration: '52m',
-            description: 'Naia Thulin nyomozó és új társa, Mark Hess egy borzalmas gyilkossági helyszínre érkeznek.',
+            durationSeconds: 3120,
+            upNextTriggerSeconds: 15,
+            description: 'Naia Thulin nyomozó és új társa, Mark Hess egy borzalmas gyilkossági helyszűre érkeznek.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/rrwycJ08PSA'
           },
@@ -42,6 +44,8 @@ export const movieDB: Content[] = [
             episode: 2,
             title: '2. epizód',
             duration: '55m',
+            durationSeconds: 3300,
+            upNextTriggerSeconds: 20,
             description: 'Hess felfedez egy gyanús nyomot a gesztenyeemberen, ami egy évekkel ezelőtti ügyhöz vezet.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/rrwycJ08PSA'
@@ -68,6 +72,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: '1. epizód',
             duration: '45m',
+            durationSeconds: 2700,
+            upNextTriggerSeconds: 15,
             description: 'A csapat első bevetése nem várt fordulatokat tartogat.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1485081666276-03999829deac?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/Y274jZs5s7s'
@@ -95,6 +101,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'A madarak csiripelnek',
             duration: '35m',
+            durationSeconds: 2100,
+            upNextTriggerSeconds: 15,
             description: 'Amy és Danny útjai kereszteződnek egy parkolóban.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/RRwycJ08PSA'
@@ -111,6 +119,8 @@ export const movieDB: Content[] = [
     description: 'Amikor a CIA legképzettebb bérgyilkosa véletlenül sötét ügynökségi titkokat tár fel, egy pszichopata exkollégája vérdíjat tűz ki a fejére, és globális hajtóvadászatot indít ellene.',
     year: 2022,
     duration: '2ó 2p',
+    durationSeconds: 7320,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.ACTION, GENRES.THRILLER],
     cast: ['Ryan Gosling', 'Chris Evans', 'Ana de Armas'],
     trailerUrl: 'https://www.youtube.com/embed/BmllggGOBAc',
@@ -137,6 +147,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Will Byers eltűnése',
             duration: '48m',
+            durationSeconds: 2880,
+            upNextTriggerSeconds: 15,
             description: 'Will hazatérve valami félelmetessel találkozik. A közelben egy kormányzati laboratóriumban valami balul sül el.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1627110991758-2d1ae81665a0?q=80&w=500',
             embedUrl: 'https://vidsrc.to/embed/tv/tt4574334/1/1'
@@ -145,6 +157,8 @@ export const movieDB: Content[] = [
             episode: 2,
             title: 'A juharszirupos kislány',
             duration: '56m',
+            durationSeconds: 3360,
+            upNextTriggerSeconds: 15,
             description: 'Lucas, Mike és Dustin egy rejtélyes lányt találnak az erdőben. Hopper kihallgatja a megriadt Joyce-ot.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1627110991758-2d1ae81665a0?q=80&w=500',
             embedUrl: 'https://vidsrc.to/embed/tv/tt4574334/1/2'
@@ -159,6 +173,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'MADMAX',
             duration: '48m',
+            durationSeconds: 2880,
+            upNextTriggerSeconds: 15,
             description: 'Will látomásai rosszabbodnak. Egy új lány érkezik a városba, aki felkelti a fiúk érdeklődését.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1627110991758-2d1ae81665a0?q=80&w=500',
             embedUrl: 'https://vidsrc.to/embed/tv/tt4574334/2/1'
@@ -175,6 +191,8 @@ export const movieDB: Content[] = [
     description: 'Egy tolvaj, aki titkokat lop el az almokból, kap egy utolsó esélyt a megváltásra: végre kell hajtania az "eredetet", azaz elültetni egy ötletet valaki elméjében.',
     year: 2010,
     duration: '2ó 28p',
+    durationSeconds: 8880,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.SCIFI, GENRES.ACTION],
     cast: ['Leonardo DiCaprio', 'Joseph Gordon-Levitt', 'Elliot Page'],
     trailerUrl: 'https://www.youtube.com/embed/YoHD9XEInc0',
@@ -200,6 +218,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Piros lámpa, zöld lámpa',
             duration: '60m',
+            durationSeconds: 3600,
+            upNextTriggerSeconds: 15,
             description: 'Gihun a hatalmas adósságai miatt beleegyezik egy titokzatos játékba, de hamarosan rájön, hogy a szabályok brutálisak.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1627110991758-2d1ae81665a0?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/oqxAJKy0ii4'
@@ -216,6 +236,8 @@ export const movieDB: Content[] = [
     description: 'Amikor a Joker néven ismert rejtélyes bűnöző káoszt és pusztítást okoz Gotham lakói körében, Batmannek szembe kell néznie az egyik legnagyobb pszichológiai és fizikai kihívással.',
     year: 2008,
     duration: '2ó 32p',
+    durationSeconds: 9120,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.ACTION, GENRES.DRAMA, GENRES.THRILLER],
     cast: ['Christian Bale', 'Heath Ledger', 'Aaron Eckhart'],
     trailerUrl: 'https://www.youtube.com/embed/EXeTwQWrcwY',
@@ -240,6 +262,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Wolferton Splash',
             duration: '56m',
+            durationSeconds: 3360,
+            upNextTriggerSeconds: 15,
             description: 'A fiatal Erzsébet feleségül megy Fülöp herceghez, miközben apja, VI. György király egészsége romlik.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1542204111235-866444c1145a?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/JWtnJjn6ng0'
@@ -254,6 +278,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Misadventure',
             duration: '58m',
+            durationSeconds: 3480,
+            upNextTriggerSeconds: 15,
             description: 'Fülöp herceg elindul egy hosszú tengerentúli útra, miközben Erzsébetnek a Szuezi-válsággal kell szembenéznie.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1542204111235-866444c1145a?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/V6f6tSExyYg'
@@ -270,6 +296,7 @@ export const movieDB: Content[] = [
     description: 'Több mint harminc évnyi szolgálat után a haditengerészet egyik legjobb pilótája, Pete "Maverick" Mitchell visszatér, hogy kiképezze a kiválasztott fiatal pilóták egy csoportját egy különleges és veszélyes küldetésre.',
     year: 2022,
     duration: '2ó 10p',
+    durationSeconds: 7800,
     genres: [GENRES.ACTION, GENRES.DRAMA],
     cast: ['Tom Cruise', 'Miles Teller', 'Jennifer Connelly'],
     trailerUrl: 'https://www.youtube.com/embed/HqsagXiW3WI',
@@ -293,6 +320,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Az első gyémánt',
             duration: '58m',
+            durationSeconds: 3480,
+            upNextTriggerSeconds: 15,
             description: 'Daphne Bridgerton bemutatkozik a londoni társaságnak, és rögtön felkelti a királyné figyelmét.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1542204111235-866444c1145a?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/gpv7ayf_tyE'
@@ -309,6 +338,8 @@ export const movieDB: Content[] = [
     description: 'A világhírű detektív, Benoit Blanc Görögországba utazik, hogy megfejtse egy milliárdos tech-mogul és baráti köre körül kialakult rejtélyes gyilkossági ügyet.',
     year: 2022,
     duration: '2ó 19p',
+    durationSeconds: 8340,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.COMEDY, GENRES.THRILLER],
     cast: ['Daniel Craig', 'Edward Norton', 'Janelle Monáe'],
     embedUrl: 'https://www.youtube.com/embed/gj5ibYSz8C0'
@@ -322,6 +353,8 @@ export const movieDB: Content[] = [
     description: 'Tyler Rake, a feketepiaci zsoldos egy újabb életveszélyes küldetésre indul: ki kell szabadítania egy könyörtelen grúz bűnöző családját a börtönből.',
     year: 2023,
     duration: '2ó 3p',
+    durationSeconds: 7380,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.ACTION, GENRES.THRILLER, GENRES.NEW],
     cast: ['Chris Hemsworth', 'Golshifteh Farahani', 'Adam Bessa'],
     embedUrl: 'https://www.youtube.com/embed/Y274jZs5s7s'
@@ -345,6 +378,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Megnyitás',
             duration: '59m',
+            durationSeconds: 3540,
+            upNextTriggerSeconds: 15,
             description: 'Beth felfedezi a sakk világát az árvaház alagsorában.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1586165368502-1bad197a6461?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/CDrieqwSdgI'
@@ -373,6 +408,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Szerda gyermeke csupa bánat',
             duration: '59m',
+            durationSeconds: 3540,
+            upNextTriggerSeconds: 15,
             description: 'Wednesdayt kicsapják az iskolából, ezért szülei a Nevermore Akadémiára küldik.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1627389955609-bf0114b0b1f3?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/Di310WS8zLk'
@@ -389,6 +426,8 @@ export const movieDB: Content[] = [
     description: 'Amikor a Föld élhetetlenné válik a jövőben, egy csapat kutató a történelem legfontosabb küldetésére indul: átlépnek a galaxisunk határain, hogy kiderítsék, van-e jövője az emberiségnek a csillagok között.',
     year: 2014,
     duration: '2ó 49p',
+    durationSeconds: 10140,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.SCIFI, GENRES.DRAMA],
     cast: ['Matthew McConaughey', 'Anne Hathaway', 'Jessica Chastain'],
     embedUrl: 'https://www.youtube.com/embed/zSWdZVtXT7E'
@@ -412,6 +451,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Titkok',
             duration: '47m',
+            durationSeconds: 2820,
+            upNextTriggerSeconds: 15,
             description: '2019-ben egy fiú eltűnése Windenben félelmet és gyanakvást kelt a lakók között.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1505663912202-ac22d4cb3707?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/rrwycJ08PSA'
@@ -425,6 +466,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Kezdetek és végek',
             duration: '54m',
+            durationSeconds: 3240,
+            upNextTriggerSeconds: 15,
             description: 'Clausen és Charlotte válaszokat keresnek. Jonas és az idegen titkokat fedeznek fel a jövőről.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1505663912202-ac22d4cb3707?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/rrwycJ08PSA'
@@ -433,6 +476,8 @@ export const movieDB: Content[] = [
             episode: 2,
             title: 'Sötét anyag',
             duration: '55m',
+            durationSeconds: 3300,
+            upNextTriggerSeconds: 15,
             description: 'Clausen átkutatja a rendőrségi aktákat. Jonas megpróbál visszatérni a saját idejébe.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1505663912202-ac22d4cb3707?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/rrwycJ08PSA'
@@ -460,6 +505,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Epizód 1',
             duration: '47m',
+            durationSeconds: 2820,
+            upNextTriggerSeconds: 15,
             description: 'A Professzor beszervezi a csapatot egy ambiciózus rablásra.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/hMANI1jbS6E'
@@ -477,6 +524,8 @@ export const movieDB: Content[] = [
     description: 'A világ legkeresettebb műkincstolvaja és a világ legjobb szélhámosa kénytelen összefogni az FBI egyik profilozójával, hogy elkapjanak egy még veszélyesebb bűnözőt.',
     year: 2021,
     duration: '1ó 58p',
+    durationSeconds: 7080,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.ACTION, GENRES.COMEDY, GENRES.POPULAR],
     cast: ['Dwayne Johnson', 'Ryan Reynolds', 'Gal Gadot'],
     embedUrl: 'https://www.youtube.com/embed/PjGkVAgXu67'
@@ -500,6 +549,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: '1. epizód',
             duration: '67m',
+            durationSeconds: 4020,
+            upNextTriggerSeconds: 15,
             description: 'Egy diákot megharap egy laboratóriumi hörcsög, ami elindítja a káoszt.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/IN5TD4obcWw'
@@ -527,6 +578,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'A vég kezdete',
             duration: '61m',
+            durationSeconds: 3660,
+            upNextTriggerSeconds: 15,
             description: 'Geralt Blavikennek találja szembe magát Renfrivel.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1514539079130-25950c84af65?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/ndl1W4ltcmg'
@@ -544,6 +597,8 @@ export const movieDB: Content[] = [
     description: 'Amikor egy rejtélyes erő megtizedeli a népességet, csak egy dolog biztos: ha meglátod, meghalsz. Egy anya bekötött szemmel indul veszélyes útra gyermekeivel.',
     year: 2018,
     duration: '2ó 4p',
+    durationSeconds: 7440,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.THRILLER, GENRES.HORROR, GENRES.DRAMA],
     cast: ['Sandra Bullock', 'Trevante Rhodes', 'John Malkovich'],
     embedUrl: 'https://www.youtube.com/embed/o2AsIXShPua'
@@ -567,6 +622,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Nemzeti himnusz',
             duration: '44m',
+            durationSeconds: 2640,
+            upNextTriggerSeconds: 15,
             description: 'A miniszterelnöknek lehetetlen döntést kell hoznia, amikor a királyi család tagját elrabolják.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/jDiYGjp5iFg'
@@ -584,6 +641,8 @@ export const movieDB: Content[] = [
     description: 'Egy zombi-járvány után Las Vegasban egy csapat zsoldos a végső kockázatot vállalja: behatolnak a karanténzónába, hogy végrehajtsák a világ legnagyobb rablását.',
     year: 2021,
     duration: '2ó 28p',
+    durationSeconds: 8880,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.ACTION, GENRES.HORROR, GENRES.THRILLER],
     cast: ['Dave Bautista', 'Ella Purnell', 'Omari Hardwick'],
     embedUrl: 'https://www.youtube.com/embed/tI1JGpbdnC0'
@@ -607,6 +666,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: '1. epizód',
             duration: '60m',
+            durationSeconds: 3600,
+            upNextTriggerSeconds: 15,
             description: 'Holden Ford ügynök elkezd érdeklődni a fogvatartottak pszichológiája iránt.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/rrwycJ08PSA'
@@ -623,6 +684,8 @@ export const movieDB: Content[] = [
     description: 'Arthur Fleck, a magányos és mentálisan zavart komikus Gothamben próbál boldogulni, de a sorozatos megaláztatások hatására elindul egy sötét, erőszakos úton.',
     year: 2019,
     duration: '2ó 2p',
+    durationSeconds: 7320,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.DRAMA, GENRES.THRILLER],
     cast: ['Joaquin Phoenix', 'Robert De Niro', 'Zazie Beetz'],
     embedUrl: 'https://www.youtube.com/embed/zAGVQLHvwOY'
@@ -635,6 +698,8 @@ export const movieDB: Content[] = [
     description: 'Egy szegény család ravasz módon beférkőzik egy gazdag család bizalmába, de az események hamarosan kontrollálhatatlanná válnak.',
     year: 2019,
     duration: '2ó 12p',
+    durationSeconds: 7920,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.THRILLER, GENRES.DRAMA, GENRES.POPULAR],
     cast: ['Song Kang-ho', 'Lee Sun-kyun', 'Cho Yeo-jeong'],
     embedUrl: 'https://www.youtube.com/embed/5xH0HfJHsaY'
@@ -658,6 +723,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Le Louvre',
             duration: '47m',
+            durationSeconds: 2820,
+            upNextTriggerSeconds: 15,
             description: 'Assane rablási kísérletet hajt végre a Louvre-ban, hogy megszerezzen egy értékes nyakláncot.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/ga0iKU6M69c'
@@ -685,6 +752,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Welcome to the Playground',
             duration: '45m',
+            durationSeconds: 2700,
+            upNextTriggerSeconds: 15,
             description: 'Vi és Powder rablási akciója nem várt következményekkel jár.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1514539079130-25950c84af65?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/fXmAurh012s'
@@ -712,6 +781,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Sleep of the Just',
             duration: '54m',
+            durationSeconds: 3240,
+            upNextTriggerSeconds: 15,
             description: 'Egy okkultista csoport véletlenül foglyul ejti az Álmok Fejedelmét.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1505663912202-ac22d4cb3707?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/83ClbRPRDXU'
@@ -739,6 +810,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Descent',
             duration: '57m',
+            durationSeconds: 3420,
+            upNextTriggerSeconds: 15,
             description: 'Steve Murphy ügynök Kolumbiába érkezik, hogy felvegye a harcot a kábítószer-kereskedők ellen.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/xl8zdCY-abw'
@@ -765,6 +838,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Epizód 1',
             duration: '57m',
+            durationSeconds: 3420,
+            upNextTriggerSeconds: 15,
             description: 'Thomas Shelby ellop egy fegyverszállítmányt, ami felkelti a kormány érdeklődését.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/oVzVdvGIC7U'
@@ -792,6 +867,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Sugarwood',
             duration: '58m',
+            durationSeconds: 3480,
+            upNextTriggerSeconds: 15,
             description: 'Marty Byrde kénytelen alkut kötni egy kegyetlen kartellel, hogy megmentse az életét.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/5hAXVqrljbs'
@@ -809,6 +886,8 @@ export const movieDB: Content[] = [
     description: 'A börtönből szabadult nő megpróbál visszailleszkedni a társadalomba, miközben keresi az elszakított húgát.',
     year: 2021,
     duration: '1ó 52p',
+    durationSeconds: 6720,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.DRAMA, GENRES.THRILLER],
     cast: ['Sandra Bullock', 'Vincent D\'Onofrio', 'Jon Bernthal'],
     embedUrl: 'https://www.youtube.com/embed/J6reL3OInuU'
@@ -832,6 +911,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Új fiúk',
             duration: '47m',
+            durationSeconds: 2820,
+            upNextTriggerSeconds: 15,
             description: 'Három ösztöndíjas diák érkezik Las Encinas-ba.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1542204111235-866444c1145a?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/QNwhAdrdwp0'
@@ -859,6 +940,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Sonnie előnye',
             duration: '17m',
+            durationSeconds: 1020,
+            upNextTriggerSeconds: 15,
             description: 'A szörnyeteg-gladiátorviadalok világában Sonnie veretlen maradt.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/wUFwunMKa4E'
@@ -876,6 +959,8 @@ export const movieDB: Content[] = [
     description: 'Az FBI profilozója kénytelen összeállni a világ legnagyobb műkincstolvajával, hogy elkapjanak egy még nagyobb szélhámost.',
     year: 2021,
     duration: '1ó 58p',
+    durationSeconds: 7080,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.ACTION, GENRES.COMEDY, GENRES.POPULAR],
     cast: ['Dwayne Johnson', 'Ryan Reynolds', 'Gal Gadot'],
     embedUrl: 'https://www.youtube.com/embed/PjGkVAgXu67'
@@ -898,6 +983,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Pilot',
             duration: '22m',
+            durationSeconds: 1320,
+            upNextTriggerSeconds: 15,
             description: 'Ray Holt kapitány átveszi az irányítást a körzet felett.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/sEOuJ4z5aTc'
@@ -915,6 +1002,8 @@ export const movieDB: Content[] = [
     description: 'Sherlock Holmes tinédzser húga eltűnt anyja keresésére indul, és közben egy nagyobb politikai összeesküvés nyomára bukkan.',
     year: 2020,
     duration: '2ó 3p',
+    durationSeconds: 7380,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.ACTION, GENRES.DRAMA, GENRES.COMEDY],
     cast: ['Millie Bobby Brown', 'Henry Cavill', 'Sam Claflin'],
     embedUrl: 'https://www.youtube.com/embed/1d0Zf9sXlHk'
@@ -928,6 +1017,8 @@ export const movieDB: Content[] = [
     description: 'Egy függőleges börtönben az étel egy platformon érkezik fentről lefelé. A fenti szinteken lakók dőzsölnek, míg az alsóbb szinteknek csak a maradék jut – ha marad bármi.',
     year: 2019,
     duration: '1ó 34p',
+    durationSeconds: 5640,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.SCIFI, GENRES.THRILLER, GENRES.HORROR],
     cast: ['Ivan Massagué', 'Antonia San Juan', 'Zorion Eguileor'],
     embedUrl: 'https://www.youtube.com/embed/RlfooqeZoFY'
@@ -940,6 +1031,8 @@ export const movieDB: Content[] = [
     description: 'Egy híres krimiíró halála után a detektív Benoit Blanc nyomozni kezd a gyanúsan viselkedő családtagok között.',
     year: 2019,
     duration: '2ó 10p',
+    durationSeconds: 7800,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.COMEDY, GENRES.THRILLER, GENRES.DRAMA],
     cast: ['Daniel Craig', 'Chris Evans', 'Ana de Armas'],
     embedUrl: 'https://www.youtube.com/embed/qGqiHJTsRkQ'
@@ -963,6 +1056,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: '1. epizód',
             duration: '52m',
+            durationSeconds: 3120,
+            upNextTriggerSeconds: 15,
             description: 'Otis és barátja, Eric szembenéznek a középiskola kihívásaival.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1542204111235-866444c1145a?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/HdZ9weP5i68'
@@ -979,6 +1074,8 @@ export const movieDB: Content[] = [
     description: 'Miután bántalmazó exe öngyilkos lesz, Ceciliát valaki – vagy valami – kísérteni kezdi, amiről senki sem hiszi el, hogy valóság.',
     year: 2020,
     duration: '2ó 4p',
+    durationSeconds: 7440,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.HORROR, GENRES.THRILLER, GENRES.SCIFI],
     cast: ['Elisabeth Moss', 'Oliver Jackson-Cohen', 'Aldis Hodge'],
     embedUrl: 'https://www.youtube.com/embed/dSBsNeYqh-k'
@@ -992,6 +1089,8 @@ export const movieDB: Content[] = [
     description: 'Egy ex-CIA ügynök globális hajtóvadászat célpontjává válik, miután rájön az ügynökség sötét titkaira.',
     year: 2022,
     duration: '2ó 2p',
+    durationSeconds: 7320,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.ACTION, GENRES.THRILLER, GENRES.NEW],
     cast: ['Ryan Gosling', 'Chris Evans', 'Ana de Armas'],
     embedUrl: 'https://www.youtube.com/embed/BmllggGOBAc'
@@ -1015,6 +1114,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Emily Párizsba megy',
             duration: '29m',
+            durationSeconds: 1740,
+            upNextTriggerSeconds: 15,
             description: 'Emily megérkezik a fények városába, hogy új életet kezdjen.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1506190500384-604770f4821a?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/lptctjat-Mk'
@@ -1032,6 +1133,8 @@ export const movieDB: Content[] = [
     description: 'Két csillagász médiakörútra indul, hogy figyelmeztesse az emberiséget egy közeledő üstökösre, ami elpusztítja a Földet, de senki sem veszi őket komolyan.',
     year: 2021,
     duration: '2ó 18p',
+    durationSeconds: 8280,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.COMEDY, GENRES.SCIFI, GENRES.DRAMA, GENRES.NEW],
     cast: ['Leonardo DiCaprio', 'Jennifer Lawrence', 'Meryl Streep'],
     embedUrl: 'https://www.youtube.com/embed/RbIxYm3mKzI'
@@ -1055,6 +1158,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: '1. epizód',
             duration: '47m',
+            durationSeconds: 2820,
+            upNextTriggerSeconds: 15,
             description: 'A tünde birodalmakat árulás rázza meg.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1514539079130-25950c84af65?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/fTpe_2G8n8Y'
@@ -1072,6 +1177,8 @@ export const movieDB: Content[] = [
     description: 'Egy fiatal német katona és társai az első világháború borzalmaival szembesülnek a nyugati fronton.',
     year: 2022,
     duration: '2ó 28p',
+    durationSeconds: 8880,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.DRAMA, GENRES.ACTION],
     cast: ['Felix Kammerer', 'Albrecht Schuch', 'Aaron Hilmer'],
     embedUrl: 'https://www.youtube.com/embed/hf8EYbVxtCY'
@@ -1095,6 +1202,8 @@ export const movieDB: Content[] = [
             episode: 1,
             title: 'Pilot',
             duration: '48m',
+            durationSeconds: 2880,
+            upNextTriggerSeconds: 15,
             description: 'Joe Goldberg találkozik Beckkel, és azonnal bűvöletébe esik.',
             thumbnailUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=500',
             embedUrl: 'https://www.youtube.com/embed/cKOhno0IMpA'
@@ -1112,6 +1221,8 @@ export const movieDB: Content[] = [
     description: 'Martin Scorsese filmje Frank Sheeran, a maffia bérgyilkosának életéről és Jimmy Hoffa eltűnéséről.',
     year: 2019,
     duration: '3ó 29p',
+    durationSeconds: 12540,
+    upNextTriggerSeconds: 15,
     genres: [GENRES.DRAMA, GENRES.THRILLER, GENRES.POPULAR],
     cast: ['Robert De Niro', 'Al Pacino', 'Joe Pesci'],
     embedUrl: 'https://www.youtube.com/embed/WHXq6YB1hUk'
