@@ -72,5 +72,14 @@ export const AVAILABLE_APPS: AppInfo[] = [
     color: 'bg-white text-blue-600',
     category: 'Tool',
     description: 'Böngészés'
+  },
+  {
+    id: 'netflix2',
+    name: 'Netflix 2',
+    icon: 'Play',
+    color: 'bg-black text-red-500',
+    category: 'Entertainment',
+    description: 'Custom Player Test',
+    customIconUrl: 'https://loodibee.com/wp-content/uploads/Netflix-N-Symbol-logo.png'
   }
 ];

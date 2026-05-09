@@ -22,6 +22,7 @@ import { doc, getDoc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { UserProfile, AppInfo, SYSTEM_APPS, AVAILABLE_APPS } from './types';
 import { handleFirestoreError, OperationType } from './lib/firestoreErrorHandler';
 import NetflixApp from './components/apps/NetflixApp';
+import Netflix2App from './components/apps/Netflix2App';
 import SettingsApp from './components/apps/SettingsApp';
 
 // Components
@@ -67,6 +68,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [activeApp, setActiveApp] = useState<AppInfo | null>(null);
   const [showPlayStore, setShowPlayStore] = useState(false);
+  const [isHomeBarHidden, setIsHomeBarHidden] = useState(false);
   
   // Auth Form State
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
@@ -334,7 +336,17 @@ export default function App() {
                 className="absolute inset-0 z-[60] flex flex-col shadow-2xl overflow-hidden"
               >
                 {activeApp.id === 'netflix' ? (
-                  <NetflixApp onClose={() => setActiveApp(null)} user={user} />
+                  <NetflixApp 
+                    onClose={() => { setActiveApp(null); setIsHomeBarHidden(false); }} 
+                    user={user} 
+                    onPlaybackChange={setIsHomeBarHidden}
+                  />
+                ) : activeApp.id === 'netflix2' ? (
+                  <Netflix2App 
+                    onClose={() => { setActiveApp(null); setIsHomeBarHidden(false); }} 
+                    user={user} 
+                    onPlaybackChange={setIsHomeBarHidden}
+                  />
                 ) : activeApp.id === 'settings' ? (
                   <SettingsApp user={user} profile={profile} onClose={() => setActiveApp(null)} />
                 ) : (
@@ -491,7 +503,7 @@ export default function App() {
         </div>
 
         {/* Unified Navigation Dock & Home Bar Indicator */}
-        <div className="fixed bottom-0 left-0 right-0 z-[70] flex flex-col items-center pb-4 md:pb-6 pointer-events-none">
+        <div className="fixed bottom-0 left-0 right-0 z-[70] flex flex-col items-center pb-1 pointer-events-none">
           <AnimatePresence>
             {!isAppActive && (
               <motion.div 
@@ -534,19 +546,22 @@ export default function App() {
             )}
           </AnimatePresence>
           
-          <div 
-            className="w-full max-w-sm flex justify-center pointer-events-auto py-2 group cursor-pointer"
-            onClick={() => {
-              setActiveApp(null);
-              setShowPlayStore(false);
-            }}
-          >
-            <motion.div 
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              className={`w-28 md:w-32 h-[6px] ${homeIndicatorColor} rounded-full backdrop-blur-sm transition-all duration-300 shadow-sm`}
-            />
-          </div>
+          <AnimatePresence>
+            {!isHomeBarHidden && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="w-full max-w-sm flex justify-center pointer-events-auto py-2 group cursor-pointer"
+                onClick={() => {
+                  setActiveApp(null);
+                  setShowPlayStore(false);
+                }}
+              >
+                <div className={`w-28 md:w-32 h-[6px] ${homeIndicatorColor} rounded-full backdrop-blur-sm transition-all duration-300 shadow-sm`} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 

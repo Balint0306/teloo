@@ -27,6 +27,7 @@ export interface Content {
   trailerUrl?: string; // for previews
   seasons?: Season[]; // for series
   isNewSeasonAvailable?: boolean;
+  isOriginal?: boolean;
 }
 
 export type Series = Content & { type: 'series'; seasons: Season[] };

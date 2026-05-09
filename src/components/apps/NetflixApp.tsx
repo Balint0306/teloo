@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { 
   Play, 
   Plus, 
@@ -33,14 +33,25 @@ const DraggableRow = ({ children, className }: { children: React.ReactNode, clas
     const [constraints, setConstraints] = useState({ left: 0, right: 0 });
 
     useEffect(() => {
-        if (containerRef.current) {
-            const containerWidth = containerRef.current.offsetWidth;
-            const contentWidth = containerRef.current.scrollWidth;
-            setConstraints({
-                left: -(contentWidth - containerWidth + 32), // 32 for padding
-                right: 0
-            });
-        }
+        const updateConstraints = () => {
+            if (containerRef.current) {
+                const containerWidth = containerRef.current.offsetWidth;
+                const contentWidth = containerRef.current.scrollWidth;
+                setConstraints({
+                    left: Math.min(0, containerWidth - contentWidth), 
+                    right: 0
+                });
+            }
+        };
+
+        updateConstraints();
+        window.addEventListener('resize', updateConstraints);
+        const timer = setTimeout(updateConstraints, 500);
+        
+        return () => {
+            window.removeEventListener('resize', updateConstraints);
+            clearTimeout(timer);
+        };
     }, [children]);
 
     return (
@@ -63,7 +74,7 @@ const DraggableRow = ({ children, className }: { children: React.ReactNode, clas
 
 // --- Sub-components (largely for presentation) ---
 
-const EpisodeCard = ({ episode, onPlay, isActive }: { episode: Episode, onPlay: (content: Content | Episode) => void, isActive?: boolean, [key: string]: any }) => {
+const EpisodeCard = ({ episode, onPlay, isActive }: { episode: Episode, onPlay: (content: any) => void, isActive?: boolean, [key: string]: any }) => {
     return (
         <div 
           className={cn(
@@ -103,19 +114,21 @@ const MovieDetailView = ({
   isLiked,
   onToggleLike,
   profile,
-  playingContent
+  playingContent,
+  progress
 }: { 
   movie: Content, 
   onClose: () => void, 
   onToggleMyList: (movieId: string) => void, 
   isInMyList: boolean, 
-  onPlay: (content: Content | Episode) => void, 
+  onPlay: (movie: Content, playbackItem?: any) => void, 
   isLiked: boolean,
   onToggleLike: (movieId: string) => void,
   profile: any,
-  playingContent: any
+  playingContent: any,
+  progress?: any
 }) => {
-    const [selectedSeason, setSelectedSeason] = useState(movie.seasons?.[0]?.season || 1);
+    const [selectedSeason, setSelectedSeason] = useState(progress?.season || movie.seasons?.[0]?.season || 1);
     
     const currentTrailerUrl = useMemo(() => {
         if (movie.type === 'series' && movie.seasons) {
@@ -125,10 +138,18 @@ const MovieDetailView = ({
         return movie.trailerUrl;
     }, [movie, selectedSeason]);
 
-    const handlePlay = () => {
+    const handlePlayClick = () => {
         if (movie.type === 'series' && movie.seasons) {
+            if (progress) {
+                const season = movie.seasons.find(s => s.season === progress.season);
+                const episode = season?.episodes.find(e => e.episode === progress.episode);
+                if (episode) {
+                    onPlay(movie, episode);
+                    return;
+                }
+            }
             const episodes = movie.seasons.find(s => s.season === selectedSeason)?.episodes || movie.seasons[0].episodes;
-            onPlay(episodes[0]);
+            onPlay(movie, episodes[0]);
         } else {
             onPlay(movie);
         }
@@ -163,7 +184,7 @@ const MovieDetailView = ({
                 {/* Center Play Button on image */}
                 <div className="absolute inset-0 flex items-center justify-center">
                     <button 
-                      onClick={handlePlay}
+                      onClick={handlePlayClick}
                       className="w-14 h-14 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border-2 border-white/60 hover:scale-110 active:scale-95 transition-all shadow-2xl"
                     >
                       <Play fill="white" className="text-white ml-1" size={28} />
@@ -213,17 +234,19 @@ const MovieDetailView = ({
                 <div className="flex flex-col gap-2 mt-2">
                   <button 
                     className="h-11 w-full bg-white text-black rounded flex items-center justify-center font-black transition-all active:scale-[0.98]" 
-                    onClick={handlePlay}
+                    onClick={handlePlayClick}
                   >
                       <Play size={22} className="mr-2 fill-black" />
-                      <span className="text-base">Lejátszás</span>
+                      <span className="text-base">
+                        {progress ? 'Folytatás' : 'Lejátszás'}
+                      </span>
                   </button>
                   <button 
                     className="h-11 w-full bg-neutral-800/90 text-white rounded flex items-center justify-center font-black transition-all active:scale-[0.98]" 
                   >
                       <Download size={20} className="mr-2" />
                       <span className="text-base">
-                        {movie.type === 'movie' ? 'Letöltés' : 'Töltsd le: 1. é./5. ep.'}
+                        {movie.type === 'movie' ? 'Letöltés' : `Töltsd le: ${progress ? `${progress.season}. é./${progress.episode}. ep.` : '1. é./1. ep.'}`}
                       </span>
                   </button>
                 </div>
@@ -280,7 +303,7 @@ const MovieDetailView = ({
                                 <EpisodeCard 
                                   key={i} 
                                   episode={episode} 
-                                  onPlay={onPlay} 
+                                  onPlay={(item) => onPlay(movie, item)} 
                                   isActive={playingContent?.embedUrl === episode.embedUrl}
                                 />
                             ))}
@@ -293,40 +316,52 @@ const MovieDetailView = ({
     )
 };
 
-const MovieCard = ({ movie, onSelect, isContinueWatching, idx }: { movie: Content, onSelect: (movie: Content) => void, isContinueWatching?: boolean, idx?: number, [key: string]: any }) => (
+const MovieCard = ({ 
+    movie, 
+    onSelect, 
+    onPlay,
+    onOpenInfo,
+    isContinueWatching, 
+    progress,
+    idx 
+}: { 
+    movie: Content, 
+    onSelect: (movie: Content) => void, 
+    onPlay?: (movie: Content, playbackItem?: any) => void,
+    onOpenInfo?: (movie: Content) => void,
+    isContinueWatching?: boolean, 
+    progress?: any,
+    idx?: number, 
+    [key: string]: any 
+}) => (
     <motion.div 
         layoutId={`movie-card-${movie.id}-${isContinueWatching ? 'cont' : 'grid'}`}
-        onTap={() => onSelect(movie)} 
+        onTap={() => isContinueWatching && onPlay ? onPlay(movie) : onSelect(movie)} 
         className={cn(
-          "flex-shrink-0 relative rounded-lg overflow-hidden cursor-pointer group shadow-2xl transition-all",
-          isContinueWatching 
-            ? "w-[240px] md:w-[320px] aspect-video" 
-            : "w-[150px] md:w-[200px] aspect-[10/16]"
+          "flex-shrink-0 relative rounded-lg overflow-hidden cursor-pointer group shadow-2xl transition-all w-[150px] md:w-[200px] aspect-[10/16] bg-neutral-900 border border-white/5",
+          "hover:scale-[1.02] active:scale-[0.98]"
         )}
-        whileTap={{ scale: 0.98 }}
     >
         <img 
             src={movie.imageUrl} 
             alt={movie.title} 
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80 transition-opacity duration-300 group-hover:opacity-40" />
         
         {/* N Logo Corner Badge */}
-        {!isContinueWatching && (
-            <div className="absolute top-2 left-2 z-10 transition-transform group-hover:scale-110">
-                <img 
-                    src="https://loodibee.com/wp-content/uploads/Netflix-N-Symbol-logo.png" 
-                    className="h-6 md:h-8 w-auto drop-shadow-lg" 
-                    alt="N" 
-                />
-            </div>
-        )}
+        <div className="absolute top-2 left-2 z-10 transition-transform duration-300 group-hover:scale-110">
+            <img 
+                src="https://loodibee.com/wp-content/uploads/Netflix-N-Symbol-logo.png" 
+                className="h-6 md:h-8 w-auto drop-shadow-lg" 
+                alt="N" 
+            />
+        </div>
 
         {/* TOP 10 Badge - shown for some items for variety */}
         {!isContinueWatching && idx !== undefined && idx % 4 === 0 && (
-            <div className="absolute top-2 right-2 z-10">
-                <div className="w-6 h-7 bg-red-600 rounded-sm flex flex-col items-center justify-center text-[5px] font-black leading-none text-white shadow-lg">
+            <div className="absolute top-2 right-2 z-10 transition-transform duration-300 group-hover:translate-x-1">
+                <div className="w-6 h-7 bg-red-600 rounded-sm flex flex-col items-center justify-center text-[5px] font-black leading-none text-white shadow-lg border border-red-500/50">
                   <span className="scale-75 text-[7px] font-bold">TOP</span>
                   <span className="text-[12px] -mt-0.5 font-bold">10</span>
                 </div>
@@ -334,33 +369,62 @@ const MovieCard = ({ movie, onSelect, isContinueWatching, idx }: { movie: Conten
         )}
 
         {isContinueWatching ? (
-            <div className="absolute inset-x-0 bottom-0 p-3 bg-black/60 backdrop-blur-md">
-                <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs md:text-sm font-bold text-white truncate pr-2">{movie.title}</p>
-                    <div className="h-6 w-6 rounded-full border border-white/40 flex items-center justify-center">
-                        <Play size={10} className="fill-white text-white ml-0.5" />
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent pt-12 pb-3 px-3">
+                <div className="flex items-center justify-between gap-2 relative z-10">
+                    <div className="flex items-center gap-3 min-w-0">
+                       <div className="h-7 w-7 rounded-full bg-white text-black flex items-center justify-center shadow-lg group-hover:bg-[#E50914] group-hover:text-white transition-colors duration-300 flex-shrink-0">
+                          <Play size={12} className="fill-current ml-0.5" />
+                       </div>
+                       <div className="flex flex-col min-w-0">
+                          <p className="text-xs font-bold text-white truncate drop-shadow-md">
+                              {movie.title}
+                          </p>
+                          {movie.type === 'series' && progress && (
+                              <p className="text-[9px] font-medium text-neutral-400 tracking-wide">
+                                {progress.season}. é./{progress.episode}. ep.
+                              </p>
+                          )}
+                       </div>
                     </div>
-                </div>
-                <div className="h-1 w-full bg-white/20 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#E50914] w-[45%]" />
+                    
+                    <motion.button 
+                        onTap={(e) => { 
+                            e.stopPropagation(); 
+                            onOpenInfo?.(movie); 
+                        }}
+                        whileHover={{ scale: 1.1, backgroundColor: "rgba(255,255,255,0.2)" }}
+                        whileTap={{ scale: 0.9 }}
+                        className="w-7 h-7 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-colors flex-shrink-0"
+                    >
+                        <Info size={14} />
+                    </motion.button>
                 </div>
             </div>
         ) : (
-            <div className="absolute bottom-3 left-3 right-3 text-center">
-                <h4 className="text-xs md:text-sm font-bold text-white leading-tight drop-shadow-lg line-clamp-2">
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/40 to-transparent p-3 pt-12">
+                <h4 className="text-[11px] md:text-sm font-bold text-white leading-tight drop-shadow-2xl line-clamp-2">
                     {movie.title}
                 </h4>
                 {movie.isOriginal && (
-                   <p className="text-[8px] font-black text-red-600 uppercase mt-1 tracking-widest drop-shadow-md">Netflix Eredeti</p>
+                   <div className="flex items-center mt-1.5 gap-1.5 opacity-90">
+                       <span className="text-[7px] font-black bg-red-600 text-white px-1 py-0 px-0.5 rounded-sm line-height-none">N</span>
+                       <p className="text-[7px] font-black text-neutral-300 uppercase tracking-widest drop-shadow-md">Eredeti</p>
+                   </div>
                 )}
             </div>
         )}
     </motion.div>
 );
 
-const SearchOverlay = ({ onClose, onSelect }: { onClose: () => void, onSelect: (movie: Content) => void }) => {
+const SearchOverlay = ({ onClose, onSelect, onPlay }: { onClose: () => void, onSelect: (movie: Content) => void, onPlay: (movie: Content) => void }) => {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<Content[]>([]);
+
+    // Use memoized random recommendations
+    const recommendations = useMemo(() => {
+        const shuffled = [...movieDB].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, 15);
+    }, []);
 
     const handleSearch = (q: string) => {
         setQuery(q);
@@ -377,49 +441,93 @@ const SearchOverlay = ({ onClose, onSelect }: { onClose: () => void, onSelect: (
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[100] bg-neutral-900 flex flex-col"
+            className="absolute inset-0 z-[100] bg-black flex flex-col"
         >
-            <div className="pt-12 px-4 pb-4 border-b border-neutral-800 flex items-center gap-4 bg-neutral-900">
-                <button onClick={onClose}><ArrowLeft className="text-white" /></button>
-                <div className="flex-1 bg-neutral-700 rounded-md flex items-center px-4 py-2">
-                  <Search size={18} className="text-neutral-400 mr-2" />
+            <div className="pt-12 px-4 pb-4 flex items-center gap-4 bg-black">
+                <div className="flex-1 bg-neutral-800 rounded-md flex items-center px-4 py-2 relative">
+                  <Search size={20} className="text-neutral-400 mr-3" />
                   <input 
                       value={query}
                       onChange={(e) => handleSearch(e.target.value)}
-                      placeholder="Keress filmet..."
-                      className="bg-transparent border-none text-white text-md focus:outline-none w-full"
+                      placeholder="Sorozatok, filmek, játékok ker..."
+                      className="bg-transparent border-none text-white text-[15px] focus:outline-none w-full placeholder:text-neutral-500 font-medium"
                       autoFocus
                   />
-                  {query && <X size={18} className="text-neutral-400 cursor-pointer" onClick={() => handleSearch("")} />}
+                  <div className="flex items-center gap-3">
+                    {query ? (
+                        <X size={20} className="text-neutral-400 cursor-pointer" onClick={() => handleSearch("")} />
+                    ) : (
+                        <img src="https://icons.veryicon.com/png/o/miscellaneous/smart-home-icon-library/microphone-119.png" className="w-5 h-5 invert opacity-70" alt="mic" />
+                    )}
+                  </div>
                 </div>
+                <button onClick={onClose} className="text-white font-medium text-sm">Mégse</button>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-4 no-scrollbar">
+            <div className="flex-1 overflow-y-auto no-scrollbar pb-32">
                 {results.length > 0 ? (
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="px-4 space-y-4 pt-4">
+                        <h3 className="font-black text-xl text-white mb-4">Találatok</h3>
                         {results.map(movie => (
-                            <div key={movie.id} onClick={() => onSelect(movie)} className="flex flex-col gap-1 cursor-pointer">
-                                <div className="aspect-[2/3] rounded overflow-hidden">
-                                    <img src={movie.imageUrl} alt={movie.title} className="w-full h-full object-cover" />
+                            <div key={movie.id} onClick={() => onSelect(movie)} className="flex items-center gap-4 group cursor-pointer">
+                                <div className="relative w-[140px] aspect-video flex-shrink-0 overflow-hidden rounded animate-in fade-in zoom-in duration-300">
+                                    <img src={movie.imageUrl} className="w-full h-full object-cover" alt="" />
                                 </div>
-                                <span className="text-[10px] text-white truncate text-center font-medium">{movie.title}</span>
+                                <span className="flex-1 text-sm font-bold text-white truncate">{movie.title}</span>
+                                <button className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center">
+                                    <Play size={18} className="text-white fill-white ml-0.5" />
+                                </button>
                             </div>
                         ))}
                     </div>
                 ) : query.length > 1 ? (
                   <p className="text-center text-neutral-500 mt-20">Nincs találat.</p>
                 ) : (
-                  <div className="space-y-6">
-                    <h3 className="font-bold text-white">Népszerű keresések</h3>
-                    {movieDB.slice(0, 3).map(m => (
-                      <div key={m.id} onClick={() => onSelect(m)} className="flex items-center gap-4 bg-neutral-800/50 p-2 rounded-lg cursor-pointer">
-                        <img src={m.imageUrl} className="w-20 aspect-video object-cover rounded" alt="q" />
-                        <span className="flex-1 text-sm font-bold text-white">{m.title}</span>
-                        <Play size={20} className="text-white mr-2" />
-                      </div>
-                    ))}
+                  <div className="px-4 space-y-6 pt-4">
+                    <h3 className="font-black text-xl text-white tracking-tight">Ajánlott tévéműsorok és filmek</h3>
+                    <div className="space-y-1">
+                        {recommendations.map(m => (
+                          <div 
+                            key={m.id} 
+                            onClick={() => onSelect(m)} 
+                            className="flex items-center gap-4 bg-transparent py-2 active:bg-neutral-800/30 transition-colors rounded-lg cursor-pointer animate-in fade-in slide-in-from-right duration-300"
+                          >
+                            <div className="relative w-[140px] aspect-video flex-shrink-0 overflow-hidden rounded">
+                                <img src={m.imageUrl} className="w-full h-full object-cover" alt={m.title} />
+                                <div className="absolute inset-0 bg-black/10" />
+                                {m.isOriginal && (
+                                    <div className="absolute top-1 left-1">
+                                        <img src="https://loodibee.com/wp-content/uploads/Netflix-N-Symbol-logo.png" className="h-4 w-auto" alt="N" />
+                                    </div>
+                                )}
+                            </div>
+                            <span className="flex-1 text-[15px] font-bold text-white leading-tight pr-2 line-clamp-2">{m.title}</span>
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); onPlay(m); }}
+                                className="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center active:scale-90 transition-transform"
+                            >
+                              <Play size={20} className="text-white fill-white ml-0.5" />
+                            </button>
+                          </div>
+                        ))}
+                    </div>
                   </div>
                 )}
+            </div>
+            
+            {/* Minimal Nav duplicate for search view as seen in screen */}
+            <div className="bg-black/95 border-t border-neutral-900 px-10 py-3 flex justify-between items-center">
+                <button onClick={onClose} className="flex flex-col items-center">
+                    <Home size={22} className="text-neutral-500" />
+                    <span className="text-[10px] text-neutral-500 font-medium mt-1">Kezdőoldal</span>
+                </button>
+                <div className="flex flex-col items-center">
+                    <Search size={22} className="text-white" />
+                    <span className="text-[10px] text-white font-medium mt-1">Keresés</span>
+                </div>
+                <div className="w-6 h-6 rounded bg-blue-500 overflow-hidden">
+                    <img src="https://i.pravatar.cc/100?u=a" alt="p" />
+                </div>
             </div>
         </motion.div>
     );
@@ -506,29 +614,114 @@ const MyListFullScreen = ({
     );
 };
 
-export default function NetflixApp({ onClose, user }: { onClose: () => void, user: any }) {
+export default function NetflixApp({ onClose, user, onPlaybackChange }: { onClose: () => void, user: any, onPlaybackChange?: (playing: boolean) => void }) {
     const [profile, setProfile] = useState<any>(null);
+    const [netflixData, setNetflixData] = useState<any>({ continueWatching: {} });
     const [selectedMovie, setSelectedMovie] = useState<Content | null>(null);
     const [playingContent, setPlayingContent] = useState<any>(null);
+
+    useEffect(() => {
+        onPlaybackChange?.(!!playingContent);
+    }, [playingContent, onPlaybackChange]);
+
     const [activeTab, setActiveTab] = useState<'home' | 'mynetflix'>('home');
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
     const [isSearchOpen, setSearchOpen] = useState(false);
     const [isMyListOpen, setMyListOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const mainScrollRef = useRef<HTMLElement>(null);
+
+    // Scroll to top when navigation changes or closing detail view
+    useEffect(() => {
+        if (mainScrollRef.current) {
+            mainScrollRef.current.scrollTo(0, 0);
+        }
+    }, [activeTab, activeCategory, selectedMovie === null]);
 
     useEffect(() => {
       if (!user) return;
-      const ref = doc(db, 'users', user.uid);
-      const unsub = onSnapshot(ref, (snap) => {
+      // Load profile
+      const profileRef = doc(db, 'users', user.uid);
+      const unsubProfile = onSnapshot(profileRef, (snap) => {
         if (snap.exists()) setProfile(snap.data());
       }, (error) => {
         handleFirestoreError(error, OperationType.GET, `users/${user.uid}`);
       });
-      return () => unsub();
+
+      // Load Netflix App Data (Continue Watching)
+      const dataRef = doc(db, 'users', user.uid, 'appData', 'netflix');
+      const unsubData = onSnapshot(dataRef, (snap) => {
+        if (snap.exists()) setNetflixData(snap.data());
+      }, (error) => {
+        // Doc might not exist yet, ignore error
+      });
+
+      return () => {
+        unsubProfile();
+        unsubData();
+      };
     }, [user]);
 
-    const handlePlay = (content: any) => {
-        setPlayingContent(content);
+    const saveProgress = async (movie: Content, episode?: Episode) => {
+      if (!user) return;
+      const dataRef = doc(db, 'users', user.uid, 'appData', 'netflix');
+      
+      const newProgress: any = {
+        lastWatched: Date.now(),
+        type: movie.type
+      };
+
+      if (movie.type === 'series' && episode) {
+        // Find season and episode index
+        movie.seasons?.forEach(s => {
+          const epIdx = s.episodes.findIndex(e => e.embedUrl === episode.embedUrl);
+          if (epIdx !== -1) {
+            newProgress.season = s.season;
+            newProgress.episode = episode.episode;
+          }
+        });
+      }
+
+      try {
+        await updateDoc(dataRef, {
+          [`continueWatching.${movie.id}`]: newProgress
+        });
+      } catch (err) {
+        // If doc doesn't exist, it might fail. Use setDoc with merge if needed, but blueprint assumes updateDoc for existing structure? 
+        // Actually best to use a helper that handles set/update
+        import('firebase/firestore').then(({ setDoc }) => {
+          setDoc(dataRef, { continueWatching: { [movie.id]: newProgress } }, { merge: true });
+        });
+      }
+    };
+
+    const handlePlay = (movie: Content, playbackItem?: any) => {
+        // If content is Episode, it has embedUrl. If movie, it has embedUrl.
+        if (playbackItem && (playbackItem as Episode).embedUrl) {
+            setPlayingContent(playbackItem);
+            saveProgress(movie, playbackItem as Episode);
+        } else if (movie.embedUrl) {
+            setPlayingContent(movie);
+            saveProgress(movie);
+        } else if (movie.type === 'series') {
+            // Find last progress or start S1E1
+            const progress = netflixData.continueWatching[movie.id];
+            let targetEpisode: Episode | undefined;
+            
+            if (progress && movie.seasons) {
+                const season = movie.seasons.find(s => s.season === progress.season);
+                targetEpisode = season?.episodes.find(e => e.episode === progress.episode);
+            }
+            
+            if (!targetEpisode && movie.seasons?.[0]?.episodes?.[0]) {
+                targetEpisode = movie.seasons[0].episodes[0];
+            }
+            
+            if (targetEpisode) {
+                setPlayingContent(targetEpisode);
+                saveProgress(movie, targetEpisode);
+            }
+        }
     };
 
     const handleToggleMyList = async (movieId: string) => {
@@ -571,6 +764,12 @@ export default function NetflixApp({ onClose, user }: { onClose: () => void, use
     }, [activeCategory]);
 
     // --- Sections for My Netflix ---
+    const continueWatchingList = useMemo(() => {
+        const history = netflixData.continueWatching || {};
+        const sortedIds = Object.keys(history).sort((a, b) => history[b].lastWatched - history[a].lastWatched);
+        return sortedIds.map(id => movieDB.find(m => m.id === id)).filter(Boolean) as Content[];
+    }, [netflixData]);
+
     const likedContent = movieDB.filter(m => (profile?.netflixLikedContent || []).includes(m.id));
     const myListMovies = movieDB.filter(m => profile ? (profile.netflixMyList || []).includes(m.id) : []);
     const myListShort = myListMovies.slice(0, 3);
@@ -632,12 +831,19 @@ export default function NetflixApp({ onClose, user }: { onClose: () => void, use
                         isLiked={(profile.netflixLikedContent || []).includes(selectedMovie.id)}
                         profile={profile}
                         playingContent={playingContent}
+                        progress={netflixData.continueWatching?.[selectedMovie.id]}
                     />
                 )}
             </AnimatePresence>
 
             <AnimatePresence>
-                {isSearchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} onSelect={(m) => { setSelectedMovie(m); setSearchOpen(false); }} />}
+                {isSearchOpen && (
+                    <SearchOverlay 
+                        onClose={() => setSearchOpen(false)} 
+                        onSelect={(m) => { setSelectedMovie(m); setSearchOpen(false); }} 
+                        onPlay={(m) => { handlePlay(m); setSearchOpen(false); }}
+                    />
+                )}
             </AnimatePresence>
 
             <AnimatePresence>
@@ -720,6 +926,7 @@ export default function NetflixApp({ onClose, user }: { onClose: () => void, use
             </header>
 
             <main 
+              ref={mainScrollRef as any}
               className="flex-1 overflow-y-auto no-scrollbar"
               onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 50)}
             >
@@ -777,7 +984,28 @@ export default function NetflixApp({ onClose, user }: { onClose: () => void, use
                     </section>
 
                     <div className={cn("space-y-10 px-4 mt-8 pb-32")}>
-                        {activeCategory && (
+                        {/* Continue Watching - Only Show if not empty */}
+                        {continueWatchingList.length > 0 && !activeCategory && (
+                            <section className="space-y-3 animate-in fade-in slide-in-from-bottom duration-700">
+                                <h3 className="text-lg md:text-xl font-bold text-white tracking-tight">Nézd tovább, {profile?.settings?.displayName || 'Netflix felhasználó'}</h3>
+                                <DraggableRow>
+                                    {continueWatchingList.map((movie, i) => (
+                                        <MovieCard 
+                                            key={movie.id} 
+                                            movie={movie} 
+                                            onSelect={setSelectedMovie} 
+                                            onPlay={handlePlay}
+                                            onOpenInfo={setSelectedMovie}
+                                            isContinueWatching 
+                                            progress={netflixData.continueWatching?.[movie.id]}
+                                            idx={i} 
+                                        />
+                                    ))}
+                                </DraggableRow>
+                            </section>
+                        )}
+
+                        {movieDB.some(m => m.isOriginal) && (
                             <section className="space-y-3">
                                 <h3 className="text-lg md:text-xl font-bold text-white tracking-tight">Kizárólag a Netflix műsorán</h3>
                                 <DraggableRow>
@@ -788,6 +1016,9 @@ export default function NetflixApp({ onClose, user }: { onClose: () => void, use
                                                 key={m.id} 
                                                 movie={m} 
                                                 onSelect={setSelectedMovie} 
+                                                onPlay={handlePlay}
+                                                onOpenInfo={setSelectedMovie}
+                                                progress={netflixData.continueWatching?.[m.id]}
                                                 idx={mIdx}
                                             />
                                         ))
@@ -798,15 +1029,17 @@ export default function NetflixApp({ onClose, user }: { onClose: () => void, use
 
                         <section className="space-y-3">
                             <h3 className="text-lg md:text-xl font-bold text-white tracking-tight">
-                                {activeCategory ? `Újonnan a kínálatban: ${activeCategory}` : `Nézd tovább, ${profile?.settings?.displayName || 'asdkiller'}`}
+                                {activeCategory ? `Újonnan a kínálatban: ${activeCategory}` : 'Népszerű a Netflixen'}
                             </h3>
                             <DraggableRow>
-                              {filteredMovies.map((m, idx) => (
+                              {(activeCategory ? filteredMovies : movieDB.filter(m => m.genres.includes(GENRES.POPULAR))).map((m, idx) => (
                                 <MovieCard 
                                     key={m.id} 
                                     movie={m} 
                                     onSelect={setSelectedMovie} 
-                                    isContinueWatching={!activeCategory} 
+                                    onPlay={handlePlay}
+                                    onOpenInfo={setSelectedMovie}
+                                    progress={netflixData.continueWatching?.[m.id]}
                                     idx={idx}
                                 />
                               ))}
@@ -821,7 +1054,15 @@ export default function NetflixApp({ onClose, user }: { onClose: () => void, use
                                 <h3 className="text-lg md:text-xl font-bold text-white tracking-tight">{title}</h3>
                                 <DraggableRow>
                                   {movies.map((m, mIdx) => (
-                                    <MovieCard key={m.id} movie={m} onSelect={setSelectedMovie} idx={mIdx} />
+                                    <MovieCard 
+                                        key={m.id} 
+                                        movie={m} 
+                                        onSelect={setSelectedMovie} 
+                                        onPlay={handlePlay}
+                                        onOpenInfo={setSelectedMovie}
+                                        progress={netflixData.continueWatching?.[m.id]}
+                                        idx={mIdx} 
+                                    />
                                   ))}
                                 </DraggableRow>
                             </section>
@@ -898,7 +1139,10 @@ export default function NetflixApp({ onClose, user }: { onClose: () => void, use
                     <Home size={24} strokeWidth={activeTab === 'home' ? 2.5 : 2} />
                     <span className="text-[10px] font-medium">Kezdőoldal</span>
                 </button>
-                <button className="flex flex-col items-center gap-1.5 text-neutral-500">
+                <button 
+                    onClick={() => setSearchOpen(true)}
+                    className={`flex flex-col items-center gap-1.5 transition-colors ${isSearchOpen ? 'text-white' : 'text-neutral-500'}`}
+                >
                     <Search size={24} />
                     <span className="text-[10px] font-medium">Keresés</span>
                 </button>
