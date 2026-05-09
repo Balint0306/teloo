@@ -26,9 +26,11 @@ export const movieDB: Content[] = [
     genres: ['Kemény', 'Komor', 'Skandináv noir', 'Dán', GENRES.NEW, GENRES.THRILLER],
     cast: ['Danica Curcic', 'Mikkel Boe Følsgaard', 'David Dencik'],
     isNewSeasonAvailable: false,
+    trailerUrl: 'https://www.youtube.com/embed/rrwycJ08PSA',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/rrwycJ08PSA',
         episodes: [
           {
             episode: 1,
@@ -64,9 +66,11 @@ export const movieDB: Content[] = [
     duration: '6 epizód',
     genres: [GENRES.POPULAR, GENRES.THRILLER],
     cast: ['Tom Burke', 'Steve Coogan', 'Tom Hughes'],
+    trailerUrl: 'https://www.youtube.com/embed/Y274jZs5s7s',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/Y274jZs5s7s',
         episodes: [
           {
             episode: 1,
@@ -93,9 +97,11 @@ export const movieDB: Content[] = [
     genres: [GENRES.POPULAR, GENRES.COMEDY, GENRES.DRAMA],
     cast: ['Steven Yeun', 'Ali Wong'],
     isNewSeasonAvailable: true,
+    trailerUrl: 'https://www.youtube.com/embed/RRwycJ08PSA',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/RRwycJ08PSA',
         episodes: [
           {
             episode: 1,
@@ -312,9 +318,11 @@ export const movieDB: Content[] = [
     duration: '3 évad',
     genres: [GENRES.DRAMA, GENRES.POPULAR],
     cast: ['Adjoa Andoh', 'Julie Andrews', 'Lorraine Ashbourne'],
+    trailerUrl: 'https://www.youtube.com/embed/gpv7ayf_tyE',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/gpv7ayf_tyE',
         episodes: [
           {
             episode: 1,
@@ -370,9 +378,11 @@ export const movieDB: Content[] = [
     duration: '7 epizód',
     genres: [GENRES.DRAMA, GENRES.FEATURED, GENRES.POPULAR],
     cast: ['Anya Taylor-Joy', 'Bill Camp', 'Marielle Heller'],
+    trailerUrl: 'https://www.youtube.com/embed/CDrieqwSdgI',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/CDrieqwSdgI',
         episodes: [
           {
             episode: 1,
@@ -443,9 +453,11 @@ export const movieDB: Content[] = [
     duration: '3 évad',
     genres: [GENRES.SCIFI, GENRES.THRILLER, GENRES.DRAMA, GENRES.POPULAR],
     cast: ['Louis Hofmann', 'Karoline Eichhorn', 'Lisa Vicari'],
+    trailerUrl: 'https://www.youtube.com/embed/rrwycJ08PSA',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/rrwycJ08PSA',
         episodes: [
           {
             episode: 1,
@@ -497,9 +509,11 @@ export const movieDB: Content[] = [
     duration: '5 évad',
     genres: [GENRES.THRILLER, GENRES.ACTION, GENRES.POPULAR, GENRES.NEW],
     cast: ['Úrsula Corberó', 'Álvaro Morte', 'Itziar Ituño'],
+    trailerUrl: 'https://www.youtube.com/embed/hMANI1jbS6E',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/hMANI1jbS6E',
         episodes: [
           {
             episode: 1,
@@ -541,9 +555,11 @@ export const movieDB: Content[] = [
     duration: '1 évad',
     genres: [GENRES.HORROR, GENRES.THRILLER, GENRES.DRAMA, GENRES.NEW],
     cast: ['Park Ji-hu', 'Yoon Chan-young', 'Cho Yi-hyun'],
+    trailerUrl: 'https://www.youtube.com/embed/IN5TD4obcWw',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/IN5TD4obcWw',
         episodes: [
           {
             episode: 1,
@@ -570,9 +586,11 @@ export const movieDB: Content[] = [
     duration: '3 évad',
     genres: [GENRES.ACTION, GENRES.DRAMA, GENRES.SCIFI, GENRES.POPULAR],
     cast: ['Henry Cavill', 'Anya Chalotra', 'Freya Allan'],
+    trailerUrl: 'https://www.youtube.com/embed/ndl1W4ltcmg',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/ndl1W4ltcmg',
         episodes: [
           {
             episode: 1,
@@ -614,9 +632,11 @@ export const movieDB: Content[] = [
     duration: '6 évad',
     genres: [GENRES.SCIFI, GENRES.DRAMA, GENRES.THRILLER, GENRES.POPULAR],
     cast: ['Bryce Dallas Howard', 'Jon Hamm', 'Aaron Paul'],
+    trailerUrl: 'https://www.youtube.com/embed/jDiYGjp5iFg',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/jDiYGjp5iFg',
         episodes: [
           {
             episode: 1,
@@ -658,9 +678,11 @@ export const movieDB: Content[] = [
     duration: '2 évad',
     genres: [GENRES.DRAMA, GENRES.THRILLER],
     cast: ['Jonathan Groff', 'Holt McCallany', 'Anna Torv'],
+    trailerUrl: 'https://www.youtube.com/embed/rrwycJ08PSA',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/rrwycJ08PSA',
         episodes: [
           {
             episode: 1,
@@ -715,9 +737,11 @@ export const movieDB: Content[] = [
     duration: '3 évad',
     genres: [GENRES.THRILLER, GENRES.ACTION, GENRES.POPULAR],
     cast: ['Omar Sy', 'Ludivine Sagnier', 'Clotilde Hesme'],
+    trailerUrl: 'https://www.youtube.com/embed/ga0iKU6M69c',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/ga0iKU6M69c',
         episodes: [
           {
             episode: 1,
@@ -744,9 +768,11 @@ export const movieDB: Content[] = [
     duration: '2 évad',
     genres: [GENRES.ACTION, GENRES.SCIFI, GENRES.DRAMA, GENRES.NEW, GENRES.POPULAR],
     cast: ['Hailee Steinfeld', 'Ella Purnell', 'Kevin Alejandro'],
+    trailerUrl: 'https://www.youtube.com/embed/fXmAurh012s',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/fXmAurh012s',
         episodes: [
           {
             episode: 1,
@@ -773,9 +799,11 @@ export const movieDB: Content[] = [
     duration: '1 évad',
     genres: [GENRES.SCIFI, GENRES.DRAMA, GENRES.HORROR],
     cast: ['Tom Sturridge', 'Boyd Holbrook', 'Patton Oswalt'],
+    trailerUrl: 'https://www.youtube.com/embed/83ClbRPRDXU',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/83ClbRPRDXU',
         episodes: [
           {
             episode: 1,
@@ -802,9 +830,11 @@ export const movieDB: Content[] = [
     duration: '3 évad',
     genres: [GENRES.THRILLER, GENRES.ACTION, GENRES.DRAMA, GENRES.POPULAR],
     cast: ['Wagner Moura', 'Pedro Pascal', 'Boyd Holbrook'],
+    trailerUrl: 'https://www.youtube.com/embed/xl8zdCY-abw',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/xl8zdCY-abw',
         episodes: [
           {
             episode: 1,
@@ -830,9 +860,11 @@ export const movieDB: Content[] = [
     duration: '6 évad',
     genres: [GENRES.DRAMA, GENRES.THRILLER, GENRES.POPULAR],
     cast: ['Cillian Murphy', 'Paul Anderson', 'Helen McCrory'],
+    trailerUrl: 'https://www.youtube.com/embed/oVzVdvGIC7U',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/oVzVdvGIC7U',
         episodes: [
           {
             episode: 1,
@@ -859,9 +891,11 @@ export const movieDB: Content[] = [
     duration: '4 évad',
     genres: [GENRES.THRILLER, GENRES.DRAMA, GENRES.POPULAR],
     cast: ['Jason Bateman', 'Laura Linney', 'Julia Garner'],
+    trailerUrl: 'https://www.youtube.com/embed/5hAXVqrljbs',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/5hAXVqrljbs',
         episodes: [
           {
             episode: 1,
@@ -903,9 +937,11 @@ export const movieDB: Content[] = [
     duration: '7 évad',
     genres: [GENRES.DRAMA, GENRES.THRILLER, GENRES.POPULAR],
     cast: ['Itzan Escamilla', 'Omar Ayuso', 'Miguel Bernardeau'],
+    trailerUrl: 'https://www.youtube.com/embed/QNwhAdrdwp0',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/QNwhAdrdwp0',
         episodes: [
           {
             episode: 1,
@@ -932,9 +968,11 @@ export const movieDB: Content[] = [
     duration: '3 évad',
     genres: [GENRES.SCIFI, GENRES.HORROR, GENRES.COMEDY],
     cast: ['Scott Whyte', 'Nolan North', 'Fred Tatasciore'],
+    trailerUrl: 'https://www.youtube.com/embed/wUFwunMKa4E',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/wUFwunMKa4E',
         episodes: [
           {
             episode: 1,
@@ -975,9 +1013,11 @@ export const movieDB: Content[] = [
     duration: '8 évad',
     genres: [GENRES.COMEDY, GENRES.POPULAR, GENRES.HUNGARIAN_DUB_TV],
     cast: ['Andy Samberg', 'Andre Braugher', 'Terry Crews'],
+    trailerUrl: 'https://www.youtube.com/embed/sEOuJ4z5aTc',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/sEOuJ4z5aTc',
         episodes: [
           {
             episode: 1,
@@ -1048,9 +1088,11 @@ export const movieDB: Content[] = [
     duration: '4 évad',
     genres: [GENRES.COMEDY, GENRES.DRAMA, GENRES.POPULAR],
     cast: ['Asa Butterfield', 'Gillian Anderson', 'Emma Mackey'],
+    trailerUrl: 'https://www.youtube.com/embed/HdZ9weP5i68',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/HdZ9weP5i68',
         episodes: [
           {
             episode: 1,
@@ -1106,9 +1148,11 @@ export const movieDB: Content[] = [
     duration: '4 évad',
     genres: [GENRES.COMEDY, GENRES.DRAMA, GENRES.POPULAR],
     cast: ['Lily Collins', 'Philippine Leroy-Beaulieu', 'Ashley Park'],
+    trailerUrl: 'https://www.youtube.com/embed/lptctjat-Mk',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/lptctjat-Mk',
         episodes: [
           {
             episode: 1,
@@ -1150,9 +1194,11 @@ export const movieDB: Content[] = [
     duration: '4 epizód',
     genres: [GENRES.ACTION, GENRES.SCIFI, GENRES.DRAMA],
     cast: ['Sophia Brown', 'Laurence O\'Fuarain', 'Michelle Yeoh'],
+    trailerUrl: 'https://www.youtube.com/embed/fTpe_2G8n8Y',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/fTpe_2G8n8Y',
         episodes: [
           {
             episode: 1,
@@ -1194,9 +1240,11 @@ export const movieDB: Content[] = [
     duration: '4 évad',
     genres: [GENRES.THRILLER, GENRES.DRAMA, GENRES.POPULAR, GENRES.HUNGARIAN_DUB_TV],
     cast: ['Penn Badgley', 'Victoria Pedretti', 'Elizabeth Lail'],
+    trailerUrl: 'https://www.youtube.com/embed/cKOhno0IMpA',
     seasons: [
       {
         season: 1,
+        trailerUrl: 'https://www.youtube.com/embed/cKOhno0IMpA',
         episodes: [
           {
             episode: 1,

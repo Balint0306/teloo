@@ -539,9 +539,9 @@ const MovieDetailView = ({
     const currentTrailerUrl = useMemo(() => {
         if (movie.type === 'series' && movie.seasons) {
             const season = movie.seasons.find(s => s.season === selectedSeason);
-            return season?.trailerUrl || movie.trailerUrl;
+            return season?.trailerUrl || movie.trailerUrl || movie.embedUrl;
         }
-        return movie.trailerUrl;
+        return movie.trailerUrl || movie.embedUrl;
     }, [movie, selectedSeason]);
 
     const trailerEmbedUrl = useMemo(() => {
@@ -549,8 +549,8 @@ const MovieDetailView = ({
         const videoId = currentTrailerUrl.split('/').pop()?.split('?')[0];
         const separator = currentTrailerUrl.includes('?') ? '&' : '?';
         
-        // Use standard YouTube controls, remove autoplay/mute overrides and allow interaction
-        return `${currentTrailerUrl}${separator}controls=1&rel=0&modestbranding=1&autoplay=0`;
+        // Background trailer: auto-playing, muted, no controls, looping, and modest branding
+        return `${currentTrailerUrl}${separator}autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&rel=0&modestbranding=1`;
     }, [currentTrailerUrl]);
 
     const handlePlayClick = () => {
@@ -577,9 +577,9 @@ const MovieDetailView = ({
             exit={{ opacity: 0 }}
             className="absolute inset-0 z-[100] bg-black overflow-y-auto no-scrollbar"
         >
-            <div className="relative w-full aspect-video bg-black">
+            <div className="relative w-full aspect-video bg-black overflow-hidden">
                 {trailerEmbedUrl ? (
-                    <div className="w-full h-full relative">
+                    <div className="w-full h-full relative scale-125 pt-[56.25%] overflow-hidden pointer-events-none">
                         <iframe 
                             src={trailerEmbedUrl}
                             className="absolute top-0 left-0 w-full h-full"
@@ -590,6 +590,7 @@ const MovieDetailView = ({
                 ) : (
                     <img src={movie.imageUrl} alt={movie.title} className="w-full h-full object-cover" />
                 )}
+
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none" />
                 
                 <button 
@@ -612,7 +613,6 @@ const MovieDetailView = ({
                     {movie.title}
                   </h2>
                   <div className="flex items-center gap-3 text-sm font-bold text-neutral-400">
-                      <span className="text-green-500">98% egyezés</span>
                       <span>{movie.year}</span>
                       <span className="bg-neutral-800 rounded px-1.5 py-0.5 text-[10px] text-white">16+</span>
                       <span>{movie.duration}</span>
@@ -626,17 +626,17 @@ const MovieDetailView = ({
                     onClick={handlePlayClick}
                   >
                       <Play size={24} className="mr-2 fill-black" />
-                      <span className="text-lg">
+                      <span className="text-sm">
                         {progress ? 'Folytatás' : 'Lejátszás'}
                       </span>
                   </button>
                   <button className="h-12 w-full bg-neutral-800/90 text-white rounded-lg flex items-center justify-center font-black transition-all active:scale-[0.98] hover:bg-neutral-700">
                       <Download size={22} className="mr-2" />
-                      <span className="text-lg">Letöltés</span>
+                      <span className="text-sm">Letöltés</span>
                   </button>
                 </div>
 
-                <p className="text-lg leading-relaxed text-white font-medium">
+                <p className="text-sm leading-relaxed text-white font-medium">
                   {movie.description}
                 </p>
 
@@ -734,28 +734,29 @@ const MovieCard = ({
         </div>
 
         {isContinueWatching ? (
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent pt-12 pb-3 px-3">
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/90 to-transparent pt-12 pb-4 px-3">
                 <div className="flex items-center justify-between gap-2 relative z-10">
-                    <div className="flex items-center gap-3 min-w-0">
-                       <div className="h-7 w-7 rounded-full bg-white text-black flex items-center justify-center shadow-lg group-hover:bg-[#E50914] group-hover:text-white transition-colors duration-300 flex-shrink-0">
-                          <Play size={12} className="fill-current ml-0.5" />
-                       </div>
-                       <div className="flex flex-col min-w-0">
-                          <p className="text-xs font-bold text-white truncate drop-shadow-md">{movie.title}</p>
-                          {movie.type === 'series' && progress && (
-                              <p className="text-[9px] font-medium text-neutral-400 tracking-wide">
-                                {progress.season}. é./{progress.episode}. ep.
-                              </p>
-                          )}
-                       </div>
+                    <div className="flex flex-col min-w-0 flex-1">
+                        <p className="text-[13px] font-black text-white truncate leading-tight tracking-tight drop-shadow-md">
+                            {movie.title}
+                        </p>
+                        {movie.type === 'series' && progress && (
+                            <p className="text-[10px] font-bold text-neutral-400 mt-0.5">
+                                {progress.season}. évad {progress.episode}. rész
+                            </p>
+                        )}
                     </div>
                     <motion.button 
-                        onTap={(e) => { e.stopPropagation(); onOpenInfo?.(movie); }}
-                        whileHover={{ scale: 1.1, backgroundColor: "rgba(255,255,255,0.2)" }}
-                        whileTap={{ scale: 0.9 }}
-                        className="w-7 h-7 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white"
+                        onTap={(e) => { 
+                            e.stopPropagation(); 
+                            onOpenInfo?.(movie); 
+                        }}
+                        whileHover={{ scale: 1.1, backgroundColor: "rgba(255,255,255,1)", color: "black" }}
+                        whileTap={{ scale: 0.95 }}
+                        className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-xl border border-white/30 flex items-center justify-center text-white transition-all shadow-lg"
+                        title="Információ"
                     >
-                        <Info size={14} />
+                        <Info size={18} strokeWidth={2.5} />
                     </motion.button>
                 </div>
             </div>
@@ -1218,18 +1219,7 @@ export default function NetflixApp({ onClose, user, onPlaybackChange }: { onClos
                         className="relative rounded-2xl overflow-hidden shadow-2xl group cursor-pointer border border-white/10 aspect-[3/4]" 
                         onClick={() => setSelectedMovie(featuredMovie)}
                       >
-                        {featuredMovie.trailerUrl ? (
-                            <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none scale-150 pt-[56.25%]">
-                                <iframe 
-                                    src={`${featuredMovie.trailerUrl}?autoplay=1&mute=1&controls=0&loop=1&playlist=${featuredMovie.trailerUrl.split('/').pop()?.split('?')[0]}&rel=0&modestbranding=1`}
-                                    className="absolute top-0 left-0 w-full h-full"
-                                    frameBorder="0"
-                                    allow="autoplay; encrypted-media"
-                                />
-                            </div>
-                        ) : (
-                            <img src={featuredMovie.imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" alt="hero" />
-                        )}
+                        <img src={featuredMovie.imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" alt="hero" />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-black/20" />
                         <div className="absolute bottom-8 left-0 right-0 px-6 flex flex-col items-center gap-6">
                           <h1 className="text-4xl md:text-5xl font-black text-white text-center tracking-tighter uppercase italic drop-shadow-2xl">
@@ -1256,7 +1246,7 @@ export default function NetflixApp({ onClose, user, onPlaybackChange }: { onClos
                     <div className="space-y-12 px-6 mt-12 pb-40">
                         {continueWatchingList.length > 0 && !activeCategory && (
                             <section className="space-y-4">
-                                <h3 className="text-xl font-bold tracking-tight text-white/90">Nézd tovább</h3>
+                                <h3 className="text-xl font-bold tracking-tight text-white/90">Nézd tovább, {profile?.settings?.displayName}</h3>
                                 <DraggableRow>
                                     {continueWatchingList.map((movie, i) => (
                                         <MovieCard 
