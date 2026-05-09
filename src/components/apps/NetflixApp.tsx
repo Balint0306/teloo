@@ -28,7 +28,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { movieDB, GENRES } from "../../lib/movie-db";
 import { Content, Episode } from "../../types/netflix";
-import { doc, updateDoc, onSnapshot } from "firebase/firestore";
+import { doc, updateDoc, onSnapshot, setDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { handleFirestoreError, OperationType } from "../../lib/firestoreErrorHandler";
 
@@ -49,7 +49,8 @@ const CustomPlayer = ({
     initialProgress?: number,
     onClose: () => void, 
     onProgressUpdate?: (seconds: number) => void,
-    onNext?: () => void 
+    onNext?: () => void,
+    key?: any
 }) => {
     const [isPlaying, setIsPlaying] = useState(true);
     const [progress, setProgress] = useState(initialProgress);
@@ -59,7 +60,7 @@ const CustomPlayer = ({
     const [showControls, setShowControls] = useState(true);
     const [isMuted, setIsMuted] = useState(false);
     const [volume, setVolume] = useState(1);
-    const [key, setKey] = useState(0); 
+    const [playerKey, setPlayerKey] = useState(0); 
     const [showUpNext, setShowUpNext] = useState(false);
     const [upNextSeconds, setUpNextSeconds] = useState(0);
     const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -92,7 +93,7 @@ const CustomPlayer = ({
     const reloadIframe = (newProgress: number) => {
         setIsBuffering(true);
         setIframeProgress(newProgress);
-        setKey(prev => prev + 1);
+        setPlayerKey(prev => prev + 1);
         setTimeout(() => setIsBuffering(false), 1000); // Wait 1s for "loading"
     };
 
@@ -105,7 +106,7 @@ const CustomPlayer = ({
     // Handle volume/mute changes without jumping back in time
     const handleVolumeOrMuteChange = () => {
         setIframeProgress(progress);
-        setKey(prev => prev + 1);
+        setPlayerKey(prev => prev + 1);
     };
 
     // Sync progress to parent frequently
@@ -209,8 +210,9 @@ const CustomPlayer = ({
         let finalUrl = url;
         const timestamp = formatSecondsToT(iframeProgress);
         
-        if (movie.id === '10') {
-            finalUrl = `https://vkvideo.ru/video_ext.php?oid=-229871314&id=456239019&hash=384c664e615cb4e7&t=${timestamp}`;
+        if (url.includes('vkvideo.ru')) {
+            const separator = finalUrl.includes('?') ? '&' : '?';
+            finalUrl = `${finalUrl}${separator}t=${timestamp}`;
         } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
             const separator = finalUrl.includes('?') ? '&' : '?';
             finalUrl = `${finalUrl}${separator}start=${Math.floor(iframeProgress)}`;
@@ -230,7 +232,7 @@ const CustomPlayer = ({
             {/* The Video Embed */}
             <div className="absolute inset-0 w-full h-full">
                 <iframe 
-                    key={key}
+                    key={playerKey}
                     src={getEmbedUrl(content.embedUrl)}
                     className="w-full h-full"
                     frameBorder="0"
@@ -532,7 +534,8 @@ const MovieDetailView = ({
   profile: any,
   playingMovie?: Content | null,
   playingContent: any,
-  progress?: any
+  progress?: any,
+  key?: any
 }) => {
     const [selectedSeason, setSelectedSeason] = useState(progress?.season || movie.seasons?.[0]?.season || 1);
     
@@ -678,9 +681,9 @@ const MovieDetailView = ({
                             </div>
                         </div>
                         <div className="grid gap-3">
-                            {movie.seasons.find(s => s.season === selectedSeason)?.episodes.map((episode, i) => (
+                            {movie.seasons.find(s => s.season === selectedSeason)?.episodes.map((episode) => (
                                 <EpisodeCard 
-                                  key={i} 
+                                  key={`episode-${movie.id}-${selectedSeason}-${episode.episode}-${episode.title}`} 
                                   episode={episode} 
                                   onPlay={(item) => onPlay(movie, item)} 
                                   isActive={playingContent?.embedUrl === episode.embedUrl}
@@ -715,7 +718,7 @@ const MovieCard = ({
 }) => (
     <motion.div 
         layoutId={`movie-card-${movie.id}-${isContinueWatching ? 'cont' : 'grid'}`}
-        onTap={() => isContinueWatching && onPlay ? onPlay(movie) : onSelect(movie)} 
+        onClick={() => isContinueWatching && onPlay ? onPlay(movie) : onSelect(movie)} 
         className={cn(
           "flex-shrink-0 relative rounded-lg overflow-hidden cursor-pointer group shadow-2xl transition-all w-[150px] md:w-[200px] aspect-[10/16] bg-neutral-900 border border-white/5",
           "hover:scale-[1.02] active:scale-[0.98]"
@@ -747,16 +750,19 @@ const MovieCard = ({
                         )}
                     </div>
                     <motion.button 
-                        onTap={(e) => { 
+                        type="button"
+                        onClick={(e) => { 
+                            e.preventDefault();
                             e.stopPropagation(); 
                             onOpenInfo?.(movie); 
                         }}
+                        onMouseDown={(e) => e.stopPropagation()}
                         whileHover={{ scale: 1.1, backgroundColor: "rgba(255,255,255,1)", color: "black" }}
                         whileTap={{ scale: 0.95 }}
-                        className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-xl border border-white/30 flex items-center justify-center text-white transition-all shadow-lg"
+                        className="w-10 h-10 rounded-full bg-black/60 backdrop-blur-xl border-2 border-white/40 flex items-center justify-center text-white transition-all shadow-2xl hover:border-white focus:outline-none"
                         title="Információ"
                     >
-                        <Info size={18} strokeWidth={2.5} />
+                        <span className="font-serif italic text-xl font-bold leading-none mt-0.5">i</span>
                     </motion.button>
                 </div>
             </div>
@@ -941,6 +947,7 @@ export default function NetflixApp({ onClose, user, onPlaybackChange }: { onClos
     const [selectedMovie, setSelectedMovie] = useState<Content | null>(null);
     const [playingMovie, setPlayingMovie] = useState<Content | null>(null);
     const [playingContent, setPlayingContent] = useState<any>(null);
+    const [startTimeOverride, setStartTimeOverride] = useState<number | null>(null);
 
     useEffect(() => {
         onPlaybackChange?.(!!playingContent);
@@ -978,47 +985,108 @@ export default function NetflixApp({ onClose, user, onPlaybackChange }: { onClos
     const saveProgress = async (movie: Content, episode?: Episode, seconds?: number) => {
       if (!user) return;
       const dataRef = doc(db, 'users', user.uid, 'appData', 'netflix');
-      const newProgress: any = { 
-        lastWatched: Date.now(), 
-        type: movie.type,
-        seconds: seconds || netflixData.continueWatching?.[movie.id]?.seconds || 0
+      
+      const now = Date.now();
+      const movieRef = `continueWatching.${movie.id}`;
+      const existingMovieProgress = netflixData.continueWatching?.[movie.id];
+      
+      let updateData: any = {
+          [`${movieRef}.lastWatched`]: now,
+          [`${movieRef}.type`]: movie.type,
       };
 
-      if (movie.type === 'series' && episode) {
-        movie.seasons?.forEach(s => {
-          const epIdx = s.episodes.findIndex(e => e.embedUrl === episode.embedUrl);
-          if (epIdx !== -1) {
-            newProgress.season = s.season;
-            newProgress.episode = episode.episode;
-          }
-        });
+      if (movie.type === 'movie') {
+          updateData[`${movieRef}.seconds`] = seconds !== undefined ? seconds : (existingMovieProgress?.seconds || 0);
+      } else if (movie.type === 'series' && episode) {
+          let seasonNum = 1;
+          movie.seasons?.forEach(s => {
+              if (s.episodes.some(e => e.embedUrl === episode.embedUrl)) {
+                  seasonNum = s.season;
+              }
+          });
+          
+          const epKey = `s${seasonNum}_e${episode.episode}`;
+          updateData[`${movieRef}.lastSeason`] = seasonNum;
+          updateData[`${movieRef}.lastEpisode`] = episode.episode;
+          updateData[`${movieRef}.episodes.${epKey}.seconds`] = seconds !== undefined ? seconds : (existingMovieProgress?.episodes?.[epKey]?.seconds || 0);
+          updateData[`${movieRef}.episodes.${epKey}.lastWatched`] = now;
       }
 
       try {
-        await updateDoc(dataRef, { [`continueWatching.${movie.id}`]: newProgress });
+        await updateDoc(dataRef, updateData);
       } catch (err) {
-        import('firebase/firestore').then(({ setDoc }) => {
-          setDoc(dataRef, { continueWatching: { [movie.id]: newProgress } }, { merge: true });
-        });
+        // If document doesn't exist, create it with setDoc
+        const initialProgress: any = {
+            type: movie.type,
+            lastWatched: now,
+        };
+        if (movie.type === 'movie') {
+            initialProgress.seconds = seconds || 0;
+        } else if (movie.type === 'series' && episode) {
+            let seasonNum = 1;
+            movie.seasons?.forEach(s => {
+                if (s.episodes.some(e => e.embedUrl === episode.embedUrl)) {
+                    seasonNum = s.season;
+                }
+            });
+            const epKey = `s${seasonNum}_e${episode.episode}`;
+            initialProgress.lastSeason = seasonNum;
+            initialProgress.lastEpisode = episode.episode;
+            initialProgress.episodes = {
+                [epKey]: { seconds: seconds || 0, lastWatched: now }
+            };
+        }
+        await setDoc(dataRef, { continueWatching: { [movie.id]: initialProgress } }, { merge: true });
       }
     };
 
-    const handlePlay = (movie: Content, playbackItem?: any) => {
+    const handlePlay = (movie: Content, playbackItem?: any, forceSeconds?: number) => {
         setPlayingMovie(movie);
+        
+        let initialSecs = 0;
+        const movieProgress = netflixData.continueWatching?.[movie.id];
+
+        if (forceSeconds !== undefined) {
+            initialSecs = forceSeconds;
+        } else if (movieProgress) {
+            if (movie.type === 'movie') {
+                initialSecs = movieProgress.seconds || 0;
+            } else if (playbackItem) {
+                // Find season number for this episode
+                let seasonNum = 1;
+                movie.seasons?.forEach(s => {
+                    if (s.episodes.some(e => e.embedUrl === (playbackItem as Episode).embedUrl)) {
+                        seasonNum = s.season;
+                    }
+                });
+                const epKey = `s${seasonNum}_e${(playbackItem as Episode).episode}`;
+                initialSecs = movieProgress.episodes?.[epKey]?.seconds || 0;
+            } else {
+                // Series clicked without specific episode, find last watched
+                const sNum = movieProgress.lastSeason || 1;
+                const eNum = movieProgress.lastEpisode || 1;
+                const epKey = `s${sNum}_e${eNum}`;
+                initialSecs = movieProgress.episodes?.[epKey]?.seconds || 0;
+            }
+        }
+
+        setStartTimeOverride(initialSecs);
+
         if (playbackItem && (playbackItem as Episode).embedUrl) {
             setPlayingContent(playbackItem);
-            saveProgress(movie, playbackItem as Episode);
+            saveProgress(movie, playbackItem as Episode, initialSecs);
         } else if (movie.embedUrl) {
             setPlayingContent(movie);
-            saveProgress(movie);
+            saveProgress(movie, undefined, initialSecs);
         } else if (movie.type === 'series') {
             // Find last progress or start S1E1
-            const progress = netflixData.continueWatching?.[movie.id];
             let targetEpisode: Episode | undefined;
             
-            if (progress && movie.seasons) {
-                const season = movie.seasons.find(s => s.season === progress.season);
-                targetEpisode = season?.episodes.find(e => e.episode === progress.episode);
+            if (movieProgress && movie.seasons) {
+                const sNum = movieProgress.lastSeason || 1;
+                const eNum = movieProgress.lastEpisode || 1;
+                const season = movie.seasons.find(s => s.season === sNum);
+                targetEpisode = season?.episodes.find(e => e.episode === eNum);
             }
             
             if (!targetEpisode && movie.seasons?.[0]?.episodes?.[0]) {
@@ -1027,7 +1095,7 @@ export default function NetflixApp({ onClose, user, onPlaybackChange }: { onClos
             
             if (targetEpisode) {
                 setPlayingContent(targetEpisode);
-                saveProgress(movie, targetEpisode);
+                saveProgress(movie, targetEpisode, initialSecs);
             }
         }
     };
@@ -1046,11 +1114,11 @@ export default function NetflixApp({ onClose, user, onPlaybackChange }: { onClos
         const nextInSeason = currentSeason?.episodes.find(e => e.episode === playingContent.episode + 1);
         
         if (nextInSeason) {
-            handlePlay(playingMovie, nextInSeason);
+            handlePlay(playingMovie, nextInSeason); // Don't force 0, let it resume if progress exists
         } else {
             const nextSeason = playingMovie.seasons.find(s => s.season === currentSeasonNum + 1);
             if (nextSeason && nextSeason.episodes[0]) {
-                handlePlay(playingMovie, nextSeason.episodes[0]);
+                handlePlay(playingMovie, nextSeason.episodes[0]); // Don't force 0
             }
         }
     }, [playingMovie, playingContent, handlePlay]);
@@ -1094,7 +1162,30 @@ export default function NetflixApp({ onClose, user, onPlaybackChange }: { onClos
     const continueWatchingList = useMemo(() => {
         const history = netflixData.continueWatching || {};
         const sortedIds = Object.keys(history).sort((a, b) => history[b].lastWatched - history[a].lastWatched);
-        return sortedIds.map(id => movieDB.find(m => m.id === id)).filter(Boolean) as Content[];
+        
+        return sortedIds.map(id => {
+            const movie = movieDB.find(m => m.id === id);
+            if (!movie) return null;
+            
+            const data = history[id];
+            let progress = 0;
+            
+            if (movie.type === 'movie' && movie.durationSeconds) {
+                progress = (data.seconds / movie.durationSeconds) * 100;
+            } else if (movie.type === 'series') {
+                const sNum = data.lastSeason || 1;
+                const eNum = data.lastEpisode || 1;
+                const epKey = `s${sNum}_e${eNum}`;
+                const episode = movie.seasons?.find(s => s.season === sNum)?.episodes.find(e => e.episode === eNum);
+                const epSeconds = data.episodes?.[epKey]?.seconds || 0;
+                
+                if (episode?.durationSeconds) {
+                    progress = (epSeconds / episode.durationSeconds) * 100;
+                }
+            }
+            
+            return { ...movie, progress };
+        }).filter(Boolean) as (Content & { progress: number })[];
     }, [netflixData]);
 
     const likedContent = useMemo(() => movieDB.filter(m => (profile?.netflixLikedContent || []).includes(m.id)), [profile]);
@@ -1115,22 +1206,31 @@ export default function NetflixApp({ onClose, user, onPlaybackChange }: { onClos
 
     return (
         <div className="flex-1 flex flex-col bg-[#141414] text-white overflow-hidden relative font-sans">
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
                 {playingContent && playingMovie && (
                     <CustomPlayer 
+                        key={`player-${playingMovie.id}-${playingContent.episode || 'movie'}`}
                         movie={playingMovie}
                         content={playingContent}
-                        initialProgress={netflixData.continueWatching?.[playingMovie.id]?.seconds || 0}
-                        onClose={() => setPlayingContent(null)}
-                        onProgressUpdate={(seconds) => saveProgress(playingMovie, playingContent?.type === 'episode' ? playingContent : undefined, seconds)}
+                        initialProgress={startTimeOverride !== null ? startTimeOverride : (netflixData.continueWatching?.[playingMovie.id]?.seconds || 0)}
+                        onClose={() => {
+                            setPlayingContent(null);
+                            setStartTimeOverride(null);
+                        }}
+                        onProgressUpdate={(seconds) => { 
+                            if (playingMovie) {
+                                saveProgress(playingMovie, playingMovie.type === 'series' ? playingContent : undefined, seconds); 
+                            }
+                        }}
                         onNext={handlePlayNext}
                     />
                 )}
             </AnimatePresence>
 
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
                 {selectedMovie && (
                     <MovieDetailView 
+                        key={`detail-${selectedMovie.id}`}
                         movie={selectedMovie} 
                         onClose={() => setSelectedMovie(null)}
                         onToggleMyList={handleToggleMyList}
@@ -1245,8 +1345,8 @@ export default function NetflixApp({ onClose, user, onPlaybackChange }: { onClos
 
                     <div className="space-y-12 px-6 mt-12 pb-40">
                         {continueWatchingList.length > 0 && !activeCategory && (
-                            <section className="space-y-4">
-                                <h3 className="text-xl font-bold tracking-tight text-white/90">Nézd tovább, {profile?.settings?.displayName}</h3>
+                            <section key="continue-watching-section" className="space-y-4">
+                                <h3 className="text-xl font-bold tracking-tight text-white/90">Nézd tovább, {profile?.settings?.displayName || profile?.displayName || 'Felhasználó'}</h3>
                                 <DraggableRow>
                                     {continueWatchingList.map((movie, i) => (
                                         <MovieCard 
@@ -1264,8 +1364,8 @@ export default function NetflixApp({ onClose, user, onPlaybackChange }: { onClos
                             </section>
                         )}
 
-                        {sections.map((section, idx) => (
-                            <section key={idx} className="space-y-4">
+                        {sections.map((section) => (
+                            <section key={`section-${section.title}`} className="space-y-4">
                                 <h3 className="text-xl font-bold tracking-tight text-white/90">{section.title}</h3>
                                 <DraggableRow>
                                   {section.movies.map((m, mIdx) => (
