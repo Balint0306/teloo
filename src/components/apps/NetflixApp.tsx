@@ -544,6 +544,15 @@ const MovieDetailView = ({
         return movie.trailerUrl;
     }, [movie, selectedSeason]);
 
+    const trailerEmbedUrl = useMemo(() => {
+        if (!currentTrailerUrl) return null;
+        const videoId = currentTrailerUrl.split('/').pop()?.split('?')[0];
+        const separator = currentTrailerUrl.includes('?') ? '&' : '?';
+        
+        // Use standard YouTube controls, remove autoplay/mute overrides and allow interaction
+        return `${currentTrailerUrl}${separator}controls=1&rel=0&modestbranding=1&autoplay=0`;
+    }, [currentTrailerUrl]);
+
     const handlePlayClick = () => {
         if (movie.type === 'series' && movie.seasons) {
             if (progress) {
@@ -569,29 +578,20 @@ const MovieDetailView = ({
             className="absolute inset-0 z-[100] bg-black overflow-y-auto no-scrollbar"
         >
             <div className="relative w-full aspect-video bg-black">
-                {currentTrailerUrl ? (
-                    <div className="w-full h-full overflow-hidden pointer-events-none scale-125 pt-[56.25%] relative">
+                {trailerEmbedUrl ? (
+                    <div className="w-full h-full relative">
                         <iframe 
-                            src={`${currentTrailerUrl}?autoplay=1&mute=1&controls=0&loop=1&playlist=${currentTrailerUrl.split('/').pop()?.split('?')[0]}&rel=0&modestbranding=1`}
+                            src={trailerEmbedUrl}
                             className="absolute top-0 left-0 w-full h-full"
                             frameBorder="0"
-                            allow="autoplay; encrypted-media"
+                            allow="autoplay; encrypted-media; fullscreen"
                         />
                     </div>
                 ) : (
                     <img src={movie.imageUrl} alt={movie.title} className="w-full h-full object-cover" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none" />
                 
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <button 
-                      onClick={handlePlayClick}
-                      className="w-16 h-16 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border-2 border-white/60 hover:scale-110 active:scale-95 transition-all shadow-2xl"
-                    >
-                      <Play fill="white" className="text-white ml-1" size={32} />
-                    </button>
-                </div>
-
                 <button 
                   onClick={onClose}
                   className="absolute top-12 left-6 z-10 w-10 h-10 rounded-full bg-black/40 backdrop-blur-xl flex items-center justify-center border border-white/10"
