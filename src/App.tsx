@@ -353,9 +353,13 @@ export default function App() {
                     <div className="flex-1 p-8 flex flex-col items-center justify-center text-center max-w-xl mx-auto">
                       <motion.div 
                         layoutId={`app-icon-${activeApp.id}`}
-                        className={`w-32 h-32 md:w-40 md:h-40 rounded-[36px] ${activeApp.color} flex items-center justify-center shadow-2xl`}
+                        className={`w-32 h-32 md:w-40 md:h-40 rounded-[36px] ${activeApp.color} flex items-center justify-center shadow-2xl overflow-hidden`}
                       >
-                        <Icon name={activeApp.icon} size={64} />
+                        {activeApp.customIconUrl ? (
+                          <img src={activeApp.customIconUrl} alt={activeApp.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <Icon name={activeApp.icon} size={64} />
+                        )}
                       </motion.div>
                       <div className="mt-8 space-y-2">
                         <h2 className="text-3xl md:text-4xl font-bold text-zinc-950 tracking-tight">{activeApp.name}</h2>
@@ -403,8 +407,12 @@ export default function App() {
                         return (
                           <div key={app.id} className="bg-white p-5 rounded-[28px] flex items-center justify-between shadow-sm border border-zinc-100/50 hover:shadow-md transition-all">
                             <div className="flex items-center gap-4">
-                              <div className={`w-14 h-14 rounded-2xl ${app.color} flex items-center justify-center shadow-lg shadow-black/5`}>
-                                <Icon name={app.icon} size={28} />
+                              <div className={`w-14 h-14 rounded-2xl ${app.color} flex items-center justify-center shadow-lg shadow-black/5 overflow-hidden`}>
+                                {app.customIconUrl ? (
+                                  <img src={app.customIconUrl} alt={app.name} className="w-full h-full object-cover" />
+                                ) : (
+                                  <Icon name={app.icon} size={28} />
+                                )}
                               </div>
                               <div>
                                 <div className="font-bold text-base text-zinc-900">{app.name}</div>
@@ -462,9 +470,13 @@ export default function App() {
                           >
                             <motion.div 
                               layoutId={`app-icon-${app.id}`}
-                              className={`w-[54px] h-[54px] md:w-[64px] md:h-[64px] ${app.color} rounded-2xl md:rounded-[24px] flex items-center justify-center shadow-lg ring-1 ring-white/10`}
+                              className={`w-[54px] h-[54px] md:w-[64px] md:h-[64px] ${app.color} rounded-2xl md:rounded-[24px] flex items-center justify-center shadow-lg ring-1 ring-white/10 overflow-hidden`}
                             >
-                              <Icon name={app.icon} size={30} />
+                              {app.customIconUrl ? (
+                                <img src={app.customIconUrl} alt={app.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <Icon name={app.icon} size={30} />
+                              )}
                             </motion.div>
                             <span className="text-[11px] md:text-[12px] text-white font-medium text-shadow text-center truncate w-full px-1">{app.name}</span>
                           </motion.div>

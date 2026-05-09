@@ -5,6 +5,7 @@ export interface AppInfo {
   color: string;
   category: string;
   description: string;
+  customIconUrl?: string;
 }
 
 export interface UserProfile {
@@ -45,7 +46,8 @@ export const AVAILABLE_APPS: AppInfo[] = [
     icon: 'Play',
     color: 'bg-black text-red-600',
     category: 'Entertainment',
-    description: 'Filmek és sorozatok'
+    description: 'Filmek és sorozatok',
+    customIconUrl: 'https://loodibee.com/wp-content/uploads/Netflix-N-Symbol-logo.png'
   },
   {
     id: 'spotify',
