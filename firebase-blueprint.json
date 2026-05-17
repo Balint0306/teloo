@@ -1,170 +1,57 @@
 {
   "entities": {
-    "User": {
+    "UserProfile": {
       "title": "User Profile",
-      "description": "Represents a virtual phone user and their system state.",
+      "description": "User profile with system settings and flame game preferences",
       "type": "object",
       "properties": {
-        "uid": { "type": "string" },
-        "email": { "type": "string" },
+        "uid": {
+          "type": "string",
+          "description": "The user's unique identifier"
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address"
+        },
         "installedAppIds": {
           "type": "array",
-          "items": { "type": "string" }
+          "description": "List of installed application IDs"
         },
         "settings": {
           "type": "object",
           "properties": {
-            "wallpaper": { "type": "string" },
-            "theme": { "type": "string", "enum": ["light", "dark"] },
-            "photoURL": { "type": "string" },
-            "displayName": { "type": "string" }
+            "wallpaper": {
+              "type": "string"
+            },
+            "theme": {
+              "type": "string",
+              "enum": [
+                "light",
+                "dark"
+              ]
+            },
+            "photoURL": {
+              "type": "string"
+            },
+            "displayName": {
+              "type": "string"
+            },
+            "is18Verified": {
+              "type": "boolean"
+            }
           }
-        },
-        "netflixMyList": { "type": "array", "items": { "type": "string" } },
-        "netflixLikedContent": { "type": "array", "items": { "type": "string" } },
-        "updatedAt": { "type": "string", "format": "date-time" }
+        }
       },
-      "required": ["uid", "email", "installedAppIds"]
-    },
-    "UserAppData": {
-      "title": "App Data",
-      "description": "User-specific data stored within a virtual application.",
-      "type": "object",
-      "properties": {
-        "userId": { "type": "string" },
-        "appId": { "type": "string" },
-        "content": { "type": "object" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["userId", "appId", "content"]
-    },
-    "Note": {
-      "title": "Note",
-      "description": "A personal note saved by the user.",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "content": { "type": "string" },
-        "color": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["title", "content", "color", "createdAt", "updatedAt"]
-    },
-    "CalendarEvent": {
-      "title": "Calendar Event",
-      "description": "An event on a specific day and time.",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "date": { "type": "string", "format": "date" },
-        "time": { "type": "string" },
-        "color": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["title", "date", "createdAt"]
-    },
-    "PasswordEntity": {
-      "title": "Password Record",
-      "description": "Stored credentials for an application or service.",
-      "type": "object",
-      "properties": {
-        "appName": { "type": "string" },
-        "email": { "type": "string" },
-        "password": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["appName", "email", "password", "createdAt", "updatedAt"]
-    },
-    "ShoppingList": {
-      "title": "Shopping List",
-      "description": "A container for shopping items.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["name", "createdAt"]
-    },
-    "ShoppingItem": {
-      "title": "Shopping Item",
-      "description": "An item in a specific shopping list.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "amount": { "type": "string" },
-        "completed": { "type": "boolean" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["name", "completed", "createdAt"]
-    },
-    "Recipe": {
-      "title": "Recipe",
-      "description": "A saved recipe.",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "ingredients": { "type": "string" },
-        "instructions": { "type": "string" },
-        "category": { "type": "string" },
-        "image": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["title", "ingredients", "instructions", "createdAt"]
-    },
-    "WeatherSettings": {
-      "title": "Weather Settings",
-      "description": "User preferences for the Weather App.",
-      "type": "object",
-      "properties": {
-        "savedLocations": { 
-          "type": "array", 
-          "items": { "type": "string" }
-        },
-        "useCurrentLocation": { "type": "boolean" },
-        "lastSelectedCity": { "type": "string" }
-      },
-      "required": ["savedLocations", "useCurrentLocation", "lastSelectedCity"]
+      "required": [
+        "uid",
+        "email"
+      ]
     }
   },
   "firestore": {
-    "/users/{userId}": {
-      "schema": "User",
-      "description": "User profile and system settings."
-    },
-    "/users/{userId}/appData/weather": {
-      "schema": "WeatherSettings",
-      "description": "Private settings for the Weather App."
-    },
-    "/users/{userId}/appData/{appId}": {
-      "schema": "UserAppData",
-      "description": "Private data for specific apps."
-    },
-    "/users/{userId}/notes/{noteId}": {
-      "schema": "Note",
-      "description": "User's personal notes."
-    },
-    "/users/{userId}/calendar/{eventId}": {
-      "schema": "CalendarEvent",
-      "description": "User's calendar events."
-    },
-    "/users/{userId}/passwords/{passwordId}": {
-      "schema": "PasswordEntity",
-      "description": "User's stored passwords."
-    },
-    "/users/{userId}/shoppingLists/{listId}": {
-      "schema": "ShoppingList",
-      "description": "User's shopping lists."
-    },
-    "/users/{userId}/shoppingLists/{listId}/items/{itemId}": {
-      "schema": "ShoppingItem",
-      "description": "Items within a specific shopping list."
-    },
-    "/users/{userId}/recipes/{recipeId}": {
-      "schema": "Recipe",
-      "description": "User's personal cookbook."
+    "users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Storage for user profiles"
     }
   }
 }

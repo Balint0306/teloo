@@ -1,6 +1,6 @@
 {
-  "name": "S24 Virtual OS",
-  "description": "A high-fidelity virtual Samsung Galaxy S24 experience with cloud-synced apps, including a high-end Atmospheric Weather app with Visual Crossing integration, Personal Notes, and Spotify.",
+  "name": "S24 Virtual OS & Flame Game",
+  "description": "A high-fidelity virtual Samsung Galaxy S24 experience featuring the 'Flame' spicy couples game with 2000+ tasks, cloud-synced settings, and atmospheric OS apps.",
   "requestFramePermissions": ["geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

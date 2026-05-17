@@ -1,12 +1,12 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 0. Global Safety Net
+    // Default deny
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // Phase 3: Primitive Definition
+    // Shared helpers
     function isSignedIn() {
       return request.auth != null;
     }
@@ -23,124 +23,43 @@ service cloud.firestore {
       return request.resource.data;
     }
 
-    // Helper for basic string validation
-    function isNonEmptyString(val, maxLen) {
-      return val is string && val.size() > 0 && val.size() <= maxLen;
+    function existing() {
+      return resource.data;
     }
 
-    // Validation for User profile
-    function isValidUser(data) {
-      return data.keys().hasAll(['uid', 'email', 'installedAppIds'])
+    // Entity validation
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'email']) 
         && data.uid == request.auth.uid
         && data.email is string
-        && data.installedAppIds is list
-        && (!('netflixMyList' in data) || data.netflixMyList is list)
-        && (!('netflixLikedContent' in data) || data.netflixLikedContent is list);
-    }
-
-    // Validation for Notes
-    function isValidNote(data) {
-      return data.keys().hasAll(['title', 'content', 'color', 'createdAt', 'updatedAt'])
-        && isNonEmptyString(data.title, 200)
-        && data.content is string && data.content.size() <= 10000
-        && data.color is string
-        && data.createdAt is timestamp
-        && data.updatedAt is timestamp;
-    }
-
-    function isValidCalendarEvent(data) {
-      return data.keys().hasAll(['title', 'date', 'createdAt'])
-        && isNonEmptyString(data.title, 200)
-        && data.date is string && data.date.size() == 10
-        && data.createdAt is timestamp;
-    }
-
-    function isValidPassword(data) {
-      return data.keys().hasAll(['appName', 'email', 'password', 'createdAt', 'updatedAt'])
-        && isNonEmptyString(data.appName, 100)
-        && isNonEmptyString(data.email, 200)
-        && isNonEmptyString(data.password, 500)
-        && data.createdAt is timestamp
-        && data.updatedAt is timestamp;
-    }
-    
-    function isValidShoppingList(data) {
-      return data.keys().hasAll(['name', 'createdAt'])
-        && isNonEmptyString(data.name, 100)
-        && data.createdAt is timestamp;
-    }
-
-    function isValidShoppingItem(data) {
-      return data.keys().hasAll(['name', 'completed', 'createdAt'])
-        && isNonEmptyString(data.name, 200)
-        && data.completed is bool
-        && data.createdAt is timestamp;
-    }
-    
-    function isValidRecipe(data) {
-      return data.keys().hasAll(['title', 'ingredients', 'instructions', 'createdAt'])
-        && isNonEmptyString(data.title, 200)
-        && data.ingredients is string
-        && data.instructions is string
-        && data.createdAt is timestamp;
+        && data.email.size() <= 256
+        && (!('installedAppIds' in data) || data.installedAppIds is list)
+        && (!('settings' in data) || (
+            data.settings is map
+            && (!('wallpaper' in data.settings) || data.settings.wallpaper is string)
+            && (!('theme' in data.settings) || data.settings.theme in ['light', 'dark'])
+            && (!('photoURL' in data.settings) || data.settings.photoURL is string)
+            && (!('displayName' in data.settings) || (data.settings.displayName is string && data.settings.displayName.size() <= 128))
+            && (!('is18Verified' in data.settings) || data.settings.is18Verified is bool)
+        ));
     }
 
     match /users/{userId} {
       allow get: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidUser(incoming());
-      allow update: if isOwner(userId) && (
-        incoming().diff(resource.data).affectedKeys().hasOnly(['installedAppIds', 'settings', 'updatedAt', 'netflixMyList', 'netflixLikedContent'])
-      );
-    }
-
-    match /users/{userId}/appData/weather {
-      allow read, write: if isOwner(userId);
-    }
-
-    match /users/{userId}/appData/{appId} {
-      allow read, write: if isOwner(userId);
-    }
-
-    match /users/{userId}/notes/{noteId} {
-      allow list: if isOwner(userId);
-      allow get: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidNote(incoming());
-      allow update: if isOwner(userId) && isValidNote(incoming());
-      allow delete: if isOwner(userId);
-    }
-
-    match /users/{userId}/calendar/{eventId} {
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidCalendarEvent(incoming());
-      allow delete: if isOwner(userId);
-    }
-
-    match /users/{userId}/passwords/{passwordId} {
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidPassword(incoming());
-      allow delete: if isOwner(userId);
-    }
-
-    match /users/{userId}/shoppingLists/{listId} {
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidShoppingList(incoming());
-      allow delete: if isOwner(userId);
+      allow list: if false; // Users can only fetch their own profile by ID
       
-      match /items/{itemId} {
-        allow list: if isOwner(userId);
-        allow create: if isOwner(userId) && isValidShoppingItem(incoming());
-        allow update: if isOwner(userId) && (
-          incoming().diff(resource.data).affectedKeys().hasOnly(['completed'])
-        );
-        allow delete: if isOwner(userId);
-      }
-    }
+      allow create: if isOwner(userId) 
+        && isValidUserProfile(incoming())
+        && isValidId(userId)
+        && incoming().uid == userId;
 
-    match /users/{userId}/recipes/{recipeId} {
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidRecipe(incoming());
-      allow get: if isOwner(userId);
-      allow delete: if isOwner(userId);
+      allow update: if isOwner(userId)
+        && isValidUserProfile(incoming())
+        // Ensure immutable fields
+        && incoming().uid == existing().uid
+        && incoming().email == existing().email;
+      
+      allow delete: if false; // Profiles are not deletable via client
     }
   }
 }

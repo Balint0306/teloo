@@ -373,7 +373,7 @@ export default function App() {
                 ) : activeApp.id === 'recipes' ? (
                   <RecipeApp onClose={() => setActiveApp(null)} user={user} />
                 ) : activeApp.id === 'flame' ? (
-                  <FlameApp onClose={() => setActiveApp(null)} />
+                  <FlameApp onClose={() => setActiveApp(null)} user={user} profile={profile} />
                 ) : (
                   <>
                     <div className="p-6 md:p-8 flex items-center justify-between border-b border-zinc-50">
