@@ -7,7 +7,8 @@ import {
   Globe, Facebook as FacebookIcon, 
   ChevronLeft, Home as HomeIcon,
   User as UserIcon, LogOut, Mail, Lock, 
-  ArrowRight, Key
+  ArrowRight, Key, Cloud, FileText,
+  Calendar, ShieldCheck, ShoppingCart, ChefHat, Heart
 } from 'lucide-react';
 import { 
   auth, 
@@ -23,6 +24,14 @@ import { UserProfile, AppInfo, SYSTEM_APPS, AVAILABLE_APPS } from './types';
 import { handleFirestoreError, OperationType } from './lib/firestoreErrorHandler';
 import NetflixApp from './components/apps/NetflixApp';
 import SettingsApp from './components/apps/SettingsApp';
+import WeatherApp from './components/apps/WeatherApp';
+import SpotifyApp from './components/apps/SpotifyApp';
+import NotesApp from './components/apps/NotesApp';
+import CalendarApp from './components/apps/CalendarApp';
+import PasswordsApp from './components/apps/PasswordsApp';
+import ShoppingApp from './components/apps/ShoppingApp';
+import RecipeApp from './components/apps/RecipeApp';
+import FlameApp from './components/apps/FlameApp';
 
 // Components
 const StatusBar = ({ isAppActive }: { isAppActive: boolean }) => {
@@ -57,6 +66,13 @@ const Icon = ({ name, size = 24 }: { name: string, size?: number }) => {
     case 'Play': return <Play size={size} />;
     case 'Globe': return <Globe size={size} />;
     case 'Facebook': return <FacebookIcon size={size} />;
+    case 'Cloud': return <Cloud size={size} />;
+    case 'FileText': return <FileText size={size} />;
+    case 'Calendar': return <Calendar size={size} />;
+    case 'ShieldCheck': return <ShieldCheck size={size} />;
+    case 'ShoppingCart': return <ShoppingCart size={size} />;
+    case 'ChefHat': return <ChefHat size={size} />;
+    case 'Heart': return <Heart size={size} />;
     default: return <SettingsIcon size={size} />;
   }
 };
@@ -100,7 +116,7 @@ export default function App() {
           const newProfile: UserProfile = {
             uid: user.uid,
             email: user.email || '',
-            installedAppIds: [],
+            installedAppIds: ['weather'],
             settings: {
               wallpaper: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1000',
               theme: 'dark',
@@ -342,6 +358,22 @@ export default function App() {
                   />
                 ) : activeApp.id === 'settings' ? (
                   <SettingsApp user={user} profile={profile} onClose={() => setActiveApp(null)} />
+                ) : activeApp.id === 'weather' ? (
+                  <WeatherApp onClose={() => setActiveApp(null)} />
+                ) : activeApp.id === 'spotify' ? (
+                  <SpotifyApp onClose={() => setActiveApp(null)} />
+                ) : activeApp.id === 'notes' ? (
+                  <NotesApp onClose={() => setActiveApp(null)} user={user} />
+                ) : activeApp.id === 'calendar' ? (
+                  <CalendarApp onClose={() => setActiveApp(null)} user={user} />
+                ) : activeApp.id === 'passwords' ? (
+                  <PasswordsApp onClose={() => setActiveApp(null)} user={user} />
+                ) : activeApp.id === 'shopping' ? (
+                  <ShoppingApp onClose={() => setActiveApp(null)} user={user} />
+                ) : activeApp.id === 'recipes' ? (
+                  <RecipeApp onClose={() => setActiveApp(null)} user={user} />
+                ) : activeApp.id === 'flame' ? (
+                  <FlameApp onClose={() => setActiveApp(null)} />
                 ) : (
                   <>
                     <div className="p-6 md:p-8 flex items-center justify-between border-b border-zinc-50">

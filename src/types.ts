@@ -55,7 +55,65 @@ export const AVAILABLE_APPS: AppInfo[] = [
     icon: 'Music',
     color: 'bg-[#1DB954] text-white',
     category: 'Music',
-    description: 'Zenehallgatás'
+    description: '1:1 Spotify Clone (Még fejlesztés alatt)',
+    customIconUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/2048px-Spotify_logo_without_text.svg.png'
+  },
+  {
+    id: 'weather',
+    name: 'Időjárás',
+    icon: 'Cloud',
+    color: 'bg-blue-400 text-white',
+    category: 'Tool',
+    description: 'Valós idejű időjárás adatok'
+  },
+  {
+    id: 'notes',
+    name: 'Jegyzetek',
+    icon: 'FileText',
+    color: 'bg-amber-400 text-white',
+    category: 'Tool',
+    description: 'Jegyezd fel gondolataid'
+  },
+  {
+    id: 'calendar',
+    name: 'Naptár',
+    icon: 'Calendar',
+    color: 'bg-red-500 text-white',
+    category: 'Tool',
+    description: 'Események és időpontok'
+  },
+  {
+    id: 'passwords',
+    name: 'Jelszavak',
+    icon: 'ShieldCheck',
+    color: 'bg-emerald-600 text-white',
+    category: 'Tool',
+    description: 'Biztonságos jelszókezelő'
+  },
+  {
+    id: 'shopping',
+    name: 'Lista',
+    icon: 'ShoppingCart',
+    color: 'bg-indigo-500 text-white',
+    category: 'Tool',
+    description: 'Bevásárló lista'
+  },
+  {
+    id: 'recipes',
+    name: 'Receptek',
+    icon: 'ChefHat',
+    color: 'bg-orange-500 text-white',
+    category: 'Lifestyle',
+    description: 'Saját receptkönyv'
+  },
+  {
+    id: 'flame',
+    name: 'Flame',
+    icon: 'Heart',
+    color: 'bg-gradient-to-br from-rose-500 to-orange-500 text-white',
+    category: 'Games',
+    description: 'Páros játékok és izgalmak (18+)',
+    customIconUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/74/TinderLogo-2017.svg'
   },
   {
     id: 'facebook',

@@ -156,8 +156,8 @@ export const movieDB: Content[] = [
             durationSeconds: 2880,
             upNextTriggerSeconds: 15,
             description: 'Will hazatérve valami félelmetessel találkozik. A közelben egy kormányzati laboratóriumban valami balul sül el.',
-            thumbnailUrl: 'https://images.unsplash.com/photo-1627110991758-2d1ae81665a0?q=80&w=500',
-            embedUrl: 'https://vkvideo.ru/video_ext.php?oid=-238528419&id=456239017&hash=1e84a7af880b29b7'
+            thumbnailUrl: 'https://occ-0-8479-1490.1.nflxso.net/dnm/api/v6/9pS1daC2n6UGc3dUogvWIPMR_OU/AAAABVK_gFEgtIUehB6eVZUDlqSrTW8upc-aOdSC5tRoAHiQQTobAdi_pmZtEufHWKP851hzbv1NDyVg4ML2-bCsjI8uZRBbyxmIFnEHVYLCbEZt2Kh-otgqlQBi.jpg?r=f18',
+            embedUrl: 'https://vkvideo.ru/video_ext.php?oid=-238528419&id=456239020&hash=de7d484e544ad459'
           },
           {
             episode: 2,
@@ -166,7 +166,7 @@ export const movieDB: Content[] = [
             durationSeconds: 3360,
             upNextTriggerSeconds: 15,
             description: 'Lucas, Mike és Dustin egy rejtélyes lányt találnak az erdőben. Hopper kihallgatja a megriadt Joyce-ot.',
-            thumbnailUrl: 'https://images.unsplash.com/photo-1627110991758-2d1ae81665a0?q=80&w=500',
+            thumbnailUrl: 'https://occ-0-8479-1490.1.nflxso.net/dnm/api/v6/9pS1daC2n6UGc3dUogvWIPMR_OU/AAAABaYzylimO7RbG8rNrXcRwIJyCwtZOQy3xC1mzkh_x9auBVrZ36B6F-NxccqWgFOWC-09O-CpChLksnkuZ8ZzFsNXqKoBMVK0ePZGbalQ7qicLea3J6vfeshp.jpg?r=4c0',
             embedUrl: 'https://vkvideo.ru/video_ext.php?oid=-238528419&id=456239018&hash=e29f7d6abfe80ce7'
           }
         ]
