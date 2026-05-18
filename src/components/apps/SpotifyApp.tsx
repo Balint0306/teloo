@@ -8,7 +8,10 @@ import {
   Tv, Monitor, Smartphone, Laptop, Speaker, Share2
 } from 'lucide-react';
 import { auth, db } from '../../lib/firebase';
-import { doc, onSnapshot, setDoc, updateDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { 
+  doc, onSnapshot, setDoc, updateDoc, serverTimestamp, 
+  getDoc, collection, query, limit 
+} from 'firebase/firestore';
 import { SPOTIFY_TRACKS, type Track } from './spotifyContent';
 
 const SpotifyLogo = ({ className }: { className?: string }) => (
@@ -31,6 +34,8 @@ const SpotifyApp = ({ onClose }: { onClose: () => void }) => {
   const [showDevices, setShowDevices] = useState(false);
   const [deviceId] = useState(() => Math.random().toString(36).substring(7));
   const [activeDeviceId, setActiveDeviceId] = useState<string | null>(null);
+  const [availableDevices, setAvailableDevices] = useState<any[]>([]);
+  const [isCastAvailable, setIsCastAvailable] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const isUpdatingFromFirebase = useRef(false);
@@ -73,8 +78,57 @@ const SpotifyApp = ({ onClose }: { onClose: () => void }) => {
       }
     });
 
-    return () => unsubPlayback();
+    // Listen for other devices
+    const devicesCol = collection(db, `users/${auth.currentUser.uid}/spotifyDevices`);
+    const unsubDevices = onSnapshot(devicesCol, (snapshot) => {
+      const devices = snapshot.docs.map(doc => doc.data());
+      // Filter out stale devices (e.g., older than 5 minutes if we had a heartbeat, but for simplicity we list all)
+      setAvailableDevices(devices);
+    });
+
+    return () => {
+      unsubPlayback();
+      unsubDevices();
+    };
   }, [deviceId, userName]);
+
+  // Google Cast Initialization
+  useEffect(() => {
+    const onCastApiAvailable = (isAvailable: boolean) => {
+      setIsCastAvailable(isAvailable);
+      if (isAvailable && (window as any).cast) {
+        const castContext = (window as any).cast.framework.CastContext.getInstance();
+        castContext.setOptions({
+          receiverApplicationId: (window as any).chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+          autoJoinPolicy: (window as any).chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+        });
+      }
+    };
+
+    (window as any).__onGCastApiAvailable = onCastApiAvailable;
+  }, []);
+
+  const handleCastMedia = () => {
+    if (!isCastAvailable) return;
+    
+    const castContext = (window as any).cast.framework.CastContext.getInstance();
+    castContext.requestSession().then(() => {
+      const session = castContext.getCurrentSession();
+      if (session) {
+        const mediaInfo = new (window as any).chrome.cast.media.MediaInfo(currentTrack.videoUrl, 'video/mp4');
+        mediaInfo.metadata = new (window as any).chrome.cast.media.GenericMediaMetadata();
+        mediaInfo.metadata.title = currentTrack.title;
+        mediaInfo.metadata.subtitle = currentTrack.artist;
+        mediaInfo.metadata.images = [{ url: currentTrack.cover }];
+        
+        const request = new (window as any).chrome.cast.media.LoadRequest(mediaInfo);
+        session.loadMedia(request).then(
+          () => console.log('Cast successful'),
+          (err: any) => console.error('Cast error', err)
+        );
+      }
+    }).catch((err: any) => console.error('Session error', err));
+  };
 
   // Update Firebase when local state changes
   const updateFirebasePlayback = async (updates: any) => {
@@ -109,12 +163,15 @@ const SpotifyApp = ({ onClose }: { onClose: () => void }) => {
   }, []);
 
   useEffect(() => {
-    if (isPlaying) {
+    // Only play audio on this device if it's the active speaker
+    const isThisActive = activeDeviceId === deviceId || activeDeviceId === null;
+
+    if (isPlaying && isThisActive) {
       videoRef.current?.play().catch(() => setIsPlaying(false));
     } else {
       videoRef.current?.pause();
     }
-  }, [isPlaying, currentTrack]);
+  }, [isPlaying, currentTrack, activeDeviceId, deviceId]);
 
   const handleTimeUpdate = () => {
     if (videoRef.current) {
@@ -404,9 +461,9 @@ const SpotifyApp = ({ onClose }: { onClose: () => void }) => {
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#121212]/80 to-[#121212]" />
               </div>
 
-              <div className="relative z-10 flex flex-col h-full bg-transparent px-8 pt-4 pb-10 overflow-hidden text-white">
+              <div className="relative z-10 flex flex-col h-full bg-transparent px-8 pt-4 pb-12 overflow-hidden text-white">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-6 shrink-0">
+                <div className="flex items-center justify-between mb-8 shrink-0">
                   <button onClick={() => setIsPlayerExpanded(false)} className="p-2 -ml-2 active:scale-75 transition-transform">
                     <ChevronDown size={32} />
                   </button>
@@ -417,12 +474,12 @@ const SpotifyApp = ({ onClose }: { onClose: () => void }) => {
                   <button className="p-2 -mr-2"><MoreHorizontal size={28} /></button>
                 </div>
 
-                {/* Album Art Container - More flexible sizing */}
-                <div className="flex-1 flex max-h-[420px] items-center justify-center mb-8 overflow-hidden">
+                {/* Album Art Container - Better sizing for various screens */}
+                <div className="flex-1 min-h-0 flex items-center justify-center mb-10 overflow-hidden">
                    <motion.div 
                      initial={{ scale: 0.9, opacity: 0 }}
                      animate={{ scale: 1, opacity: 1 }}
-                     className="w-full aspect-square max-w-[340px] rounded shadow-2xl overflow-hidden"
+                     className="w-full aspect-square max-w-[360px] rounded shadow-2xl overflow-hidden"
                    >
                      <img 
                        src={currentTrack.cover} 
@@ -432,24 +489,24 @@ const SpotifyApp = ({ onClose }: { onClose: () => void }) => {
                    </motion.div>
                 </div>
 
-                {/* Info Container - Fixed at bottom area */}
-                <div className="w-full max-w-[400px] mx-auto shrink-0">
+                {/* Info Container - Fixed layout at bottom */}
+                <div className="w-full max-w-[420px] mx-auto shrink-0 px-2">
                    {/* Track Info */}
                    <div className="flex justify-between items-center mb-8">
                       <div className="flex-1 min-w-0 pr-4">
                         <h2 className="text-2xl font-black tracking-tighter mb-0.5 truncate">{currentTrack.title}</h2>
                         <p className="text-white/60 font-bold text-lg tracking-tight truncate">{currentTrack.artist}</p>
                       </div>
-                      <button className="p-2 active:scale-75 transition-all">
-                         <Plus size={32} className="text-white" />
+                      <button className="p-1 active:scale-75 transition-all">
+                         <Plus size={24} className="text-white bg-transparent rounded-full border-2 border-white/20 p-1" />
                       </button>
                    </div>
 
                    {/* Progress Bar */}
                    <div className="w-full mb-8">
-                      <div className="relative h-1 mb-2 bg-white/20 rounded-full group cursor-pointer overflow-hidden">
+                      <div className="relative h-1 mb-2.5 bg-white/20 rounded-full group cursor-pointer">
                          <div 
-                           className="absolute left-0 top-0 h-full bg-white rounded-full" 
+                           className="absolute left-0 top-0 h-full bg-white rounded-full group-hover:bg-[#1DB954]" 
                            style={{ width: `${progressPercent}%` }} 
                          />
                          <input 
@@ -458,7 +515,7 @@ const SpotifyApp = ({ onClose }: { onClose: () => void }) => {
                            max={duration || 100}
                            value={currentTime}
                            onChange={handleSeek}
-                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                          />
                       </div>
                       <div className="flex justify-between text-[11px] font-bold text-white/50 tracking-tighter">
@@ -467,32 +524,45 @@ const SpotifyApp = ({ onClose }: { onClose: () => void }) => {
                       </div>
                    </div>
 
-                   {/* Controls */}
-                   <div className="flex items-center justify-between mb-8 px-2">
-                      <Shuffle size={26} className="text-[#1DB954] hover:text-[#1ED760] transition-colors" />
-                      <SkipBack onClick={handlePrev} size={42} className="fill-current hover:scale-110 active:scale-90 transition-transform cursor-pointer" />
+                   {/* Main Controls - Scale 1:1 with Spotify (Even smaller) */}
+                   <div className="flex items-center justify-between mb-8 px-1">
+                      <Shuffle size={16} className="text-[#1DB954] hover:text-[#1ED760] transition-colors" />
+                      <SkipBack onClick={handlePrev} size={24} className="fill-current active:scale-95 transition-transform cursor-pointer" />
                       <button 
                         onClick={togglePlay}
-                        className="w-18 h-18 bg-white rounded-full flex items-center justify-center text-black shadow-xl active:scale-95 transition-transform hover:scale-105"
+                        className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-black shadow-xl active:scale-95 transition-transform hover:scale-105"
                       >
-                        {isPlaying ? <Pause size={38} fill="black" /> : <Play size={38} fill="black" className="ml-1" />}
+                        {isPlaying ? <Pause size={20} fill="black" /> : <Play size={20} fill="black" className="ml-1" />}
                       </button>
-                      <SkipForward onClick={handleNext} size={42} className="fill-current hover:scale-110 active:scale-90 transition-transform cursor-pointer" />
-                      <Repeat size={26} className="text-white/60 hover:text-white transition-colors" />
+                      <SkipForward onClick={handleNext} size={24} className="fill-current active:scale-95 transition-transform cursor-pointer" />
+                      <Repeat size={16} className="text-white/60 hover:text-white transition-colors" />
                    </div>
 
                    {/* Bottom Bar Controls */}
                    <div className="flex justify-between items-center text-white/70">
-                      <button 
-                       onClick={() => setShowDevices(!showDevices)} 
-                       className={`flex items-center gap-2 transition-colors ${activeDeviceId !== deviceId ? 'text-[#1DB954]' : 'hover:text-white'}`}
-                      >
-                         <Speaker size={20} />
-                         <span className="text-[10px] font-bold tracking-tight">
-                           {activeDeviceId !== deviceId ? 'Csatlakozva' : `${userName} – WH-CH520`}
-                         </span>
-                      </button>
-                      <div className="flex gap-8">
+                      <div className="flex items-center gap-4">
+                        <button 
+                         onClick={() => setShowDevices(!showDevices)} 
+                         className={`flex items-center gap-2.5 transition-colors ${activeDeviceId !== deviceId && activeDeviceId !== null ? 'text-[#1DB954]' : 'hover:text-white'}`}
+                        >
+                           <Speaker size={20} className={activeDeviceId !== deviceId && activeDeviceId !== null ? 'text-[#1DB954]' : ''} />
+                           <span className="text-[12px] font-bold tracking-tight">
+                             {activeDeviceId !== deviceId && activeDeviceId !== null ? 
+                               `Lejátszás ezen: ${availableDevices.find(d => d.id === activeDeviceId)?.name || 'Másik eszköz'}` : 
+                               `${userName} – WH-CH520`}
+                           </span>
+                        </button>
+                        {isCastAvailable && (
+                          <button 
+                            onClick={handleCastMedia}
+                            className="p-1 hover:text-[#1DB954] transition-colors"
+                            title="Google Cast"
+                          >
+                            <Tv size={20} />
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex gap-10">
                         <Share2 size={22} className="hover:text-white transition-colors cursor-pointer" />
                         <ListMusic size={22} className="hover:text-white transition-colors cursor-pointer" />
                       </div>
@@ -520,36 +590,28 @@ const SpotifyApp = ({ onClose }: { onClose: () => void }) => {
                       <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6" />
                       <h3 className="text-center text-xl font-black mb-8 tracking-tighter">Csatlakozás eszközhöz</h3>
                       
-                      <div className="space-y-2 mb-8">
-                        <button 
-                          onClick={() => { setActiveDeviceId(deviceId); updateFirebasePlayback({ activeDeviceId: deviceId }); setShowDevices(false); }}
-                          className={`flex items-center gap-4 w-full p-4 rounded-xl transition-all ${activeDeviceId === deviceId ? 'bg-white/10 text-[#1DB954]' : 'hover:bg-white/5'}`}
-                        >
-                          <Smartphone className={activeDeviceId === deviceId ? 'text-[#1DB954]' : ''} />
-                          <div className="text-left">
-                            <p className="font-bold">Ez az eszköz</p>
-                            <p className="text-xs text-white/40">Zenelejátszás ezen a telefonon</p>
-                          </div>
-                        </button>
-                        
-                        <button className="flex items-center gap-4 w-full p-4 rounded-xl hover:bg-white/5 transition-all text-white/60">
-                          <Monitor />
-                          <div className="text-left">
-                            <p className="font-bold">Nappali TV</p>
-                            <p className="text-xs text-white/40">Zenelejátszás a TV-n (Offline)</p>
-                          </div>
-                        </button>
-
-                        <button 
-                          onClick={() => { alert('Éppen csatlakozik...'); setShowDevices(false); }}
-                          className="flex items-center gap-4 w-full p-4 rounded-xl hover:bg-white/5 transition-all text-white/60"
-                        >
-                          <Laptop />
-                          <div className="text-left">
-                            <p className="font-bold">Bálint MacBook Pro-ja</p>
-                            <p className="text-xs text-white/40">Közeli macOS eszköz</p>
-                          </div>
-                        </button>
+                      <div className="space-y-2 mb-8 max-h-[300px] overflow-y-auto no-scrollbar">
+                        {availableDevices.map((device) => (
+                          <button 
+                            key={device.id}
+                            onClick={() => { 
+                              setActiveDeviceId(device.id); 
+                              updateFirebasePlayback({ activeDeviceId: device.id }); 
+                              setShowDevices(false); 
+                            }}
+                            className={`flex items-center gap-4 w-full p-4 rounded-xl transition-all ${activeDeviceId === device.id ? 'bg-white/10 text-[#1DB954]' : 'hover:bg-white/5'}`}
+                          >
+                            {device.type === 'smartphone' ? <Smartphone className={activeDeviceId === device.id ? 'text-[#1DB954]' : ''} /> : 
+                             device.type === 'computer' ? <Laptop className={activeDeviceId === device.id ? 'text-[#1DB954]' : ''} /> : 
+                             <Monitor className={activeDeviceId === device.id ? 'text-[#1DB954]' : ''} />}
+                            <div className="text-left">
+                              <p className="font-bold">{device.id === deviceId ? 'Ez az eszköz' : device.name}</p>
+                              <p className="text-xs text-white/40">
+                                {activeDeviceId === device.id ? 'Zenelejátszás ezen' : 'Váltás erre az eszközre'}
+                              </p>
+                            </div>
+                          </button>
+                        ))}
                       </div>
 
                       <button 

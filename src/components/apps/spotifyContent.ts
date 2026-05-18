@@ -76,7 +76,7 @@ export const SPOTIFY_TRACKS: Track[] = [
     id: 9, 
     title: 'Mióta elhagytál (Nem vagyok álmos)', 
     artist: 'BSW', 
-    cover: 'https://i.scdn.co/image/ab67616d00004851586d42f31bf6fb8b8006ee29', 
+    cover: 'https://i.scdn.co/image/ab67616d0000b273586d42f31bf6fb8b8006ee29', 
     videoUrl: 'https://www.dropbox.com/scl/fi/9n642b1i715j5xbge6nrb/BSW-Mi-ta-elhagyt-l-Nem-vagyok-lmos.mp4?rlkey=s9s1oqmfupwh63awib64d04mg&st=lwvdqvto&dl=1',
     color: '#1a1a1a' 
   },
