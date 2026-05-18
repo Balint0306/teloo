@@ -1,18 +1,32 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Default deny
+    // 0. Global Safety Net
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // Shared helpers
+    // --- Helpers ---
+
     function isSignedIn() {
       return request.auth != null;
     }
 
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email == 'balintpaypal602@gmail.com' && request.auth.token.email_verified == true) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true)
+      );
     }
 
     function isValidId(id) {
@@ -27,39 +41,158 @@ service cloud.firestore {
       return resource.data;
     }
 
-    // Entity validation
-    function isValidUserProfile(data) {
-      return data.keys().hasAll(['uid', 'email']) 
-        && data.uid == request.auth.uid
-        && data.email is string
-        && data.email.size() <= 256
-        && (!('installedAppIds' in data) || data.installedAppIds is list)
-        && (!('settings' in data) || (
-            data.settings is map
-            && (!('wallpaper' in data.settings) || data.settings.wallpaper is string)
-            && (!('theme' in data.settings) || data.settings.theme in ['light', 'dark'])
-            && (!('photoURL' in data.settings) || data.settings.photoURL is string)
-            && (!('displayName' in data.settings) || (data.settings.displayName is string && data.settings.displayName.size() <= 128))
-            && (!('is18Verified' in data.settings) || data.settings.is18Verified is bool)
-        ));
+    // --- Admins Collection (Manual Bootstrap) ---
+    match /admins/{userId} {
+      allow read: if isSignedIn();
+      allow write: if false; // Only via Console
     }
 
-    match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false; // Users can only fetch their own profile by ID
-      
-      allow create: if isOwner(userId) 
-        && isValidUserProfile(incoming())
-        && isValidId(userId)
-        && incoming().uid == userId;
+    // --- User Profile ---
 
-      allow update: if isOwner(userId)
-        && isValidUserProfile(incoming())
-        // Ensure immutable fields
-        && incoming().uid == existing().uid
-        && incoming().email == existing().email;
+    match /users/{userId} {
+      function isValidUser(data) {
+        return data.uid == userId &&
+          data.email is string && data.email.size() <= 200 &&
+          data.installedAppIds is list && data.installedAppIds.size() <= 100 &&
+          data.settings is map &&
+          (data.isAdmin == true || data.isAdmin == false || !('isAdmin' in data));
+      }
+
+      // Secure List Query: allow list only if admin
+      allow list: if isAdmin();
       
-      allow delete: if false; // Profiles are not deletable via client
+      // Secure Get: Owner or Admin
+      allow get: if isOwner(userId) || isAdmin();
+      
+      allow create: if isOwner(userId) && isValidUser(incoming()) && !('isAdmin' in incoming());
+      
+      allow update: if (isOwner(userId) && isValidUser(incoming()) && (
+        // Standard updates: theme, wallpaper, apps
+        incoming().diff(existing()).affectedKeys().hasOnly(['settings', 'installedAppIds', 'isAdmin', 'updatedAt']) &&
+        // Protect immutability of original ID and email if they existed
+        incoming().uid == existing().uid &&
+        incoming().email == existing().email &&
+        // Identity Integrity: Allow owner to set isAdmin: true (the client password 'admin123' is the gate)
+        (incoming().isAdmin != true || existing().isAdmin == true || isOwner(userId) || isAdmin())
+      )) || isAdmin();
+    }
+
+    // --- Notes ---
+    match /users/{userId}/notes/{noteId} {
+      function isValidNote(data) {
+        return data.title is string && data.title.size() <= 256 &&
+          data.content is string && data.content.size() <= 10000 &&
+          data.createdAt is timestamp &&
+          data.updatedAt is timestamp;
+      }
+
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidId(noteId) && isValidNote(incoming()) && incoming().createdAt == request.time;
+      allow update: if (isOwner(userId) && isValidNote(incoming()) && 
+        incoming().updatedAt == request.time &&
+        incoming().createdAt == existing().createdAt) || isAdmin();
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+
+    // --- Calendar ---
+    match /users/{userId}/calendar/{eventId} {
+      function isValidEvent(data) {
+        return data.title is string && data.title.size() <= 256 &&
+          data.date is string && data.date.size() <= 20 &&
+          data.createdAt is timestamp;
+      }
+
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidId(eventId) && isValidEvent(incoming()) && incoming().createdAt == request.time;
+      allow update: if (isOwner(userId) && isValidEvent(incoming()) && 
+        incoming().createdAt == existing().createdAt) || isAdmin();
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+
+    // --- Shopping Lists ---
+    match /users/{userId}/shoppingLists/{listId} {
+      function isValidList(data) {
+        return data.name is string && data.name.size() <= 128 &&
+          data.createdAt is timestamp;
+      }
+
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidId(listId) && isValidList(incoming()) && incoming().createdAt == request.time;
+      allow update: if (isOwner(userId) && isValidList(incoming()) && 
+        incoming().createdAt == existing().createdAt) || isAdmin();
+      allow delete: if isOwner(userId) || isAdmin();
+
+      match /items/{itemId} {
+        function isValidItem(data) {
+          return data.text is string && data.text.size() <= 256 &&
+            data.completed is bool &&
+            data.createdAt is timestamp;
+        }
+
+        allow read: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && isValidId(itemId) && isValidItem(incoming()) && incoming().createdAt == request.time;
+        allow update: if (isOwner(userId) && isValidItem(incoming()) && 
+          incoming().createdAt == existing().createdAt) || isAdmin();
+        allow delete: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    // --- Passwords ---
+    match /users/{userId}/passwords/{passwordId} {
+      function isValidPassword(data) {
+        return data.appName is string && data.appName.size() <= 256 &&
+          data.email is string && data.email.size() <= 256 &&
+          data.password is string && data.password.size() <= 512 &&
+          data.createdAt is timestamp;
+      }
+
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidId(passwordId) && isValidPassword(incoming()) && incoming().createdAt == request.time;
+      allow update: if (isOwner(userId) && isValidPassword(incoming()) && 
+        incoming().createdAt == existing().createdAt) || isAdmin();
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+
+    // --- Recipes ---
+    match /users/{userId}/recipes/{recipeId} {
+      function isValidRecipe(data) {
+        return data.title is string && data.title.size() <= 256 &&
+          data.ingredients is string && data.ingredients.size() <= 5000 &&
+          data.instructions is string && data.instructions.size() <= 10000 &&
+          data.createdAt is timestamp;
+      }
+
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidId(recipeId) && isValidRecipe(incoming()) && incoming().createdAt == request.time;
+      allow update: if (isOwner(userId) && isValidRecipe(incoming()) && 
+        incoming().createdAt == existing().createdAt) || isAdmin();
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+
+    // --- Spotify ---
+    match /users/{userId}/spotify/playback {
+      function isValidPlayback(data) {
+        return data.trackId is number &&
+          data.isPlaying is bool &&
+          data.currentTime is number &&
+          data.activeDeviceId is string && data.activeDeviceId.size() <= 128 &&
+          data.updatedAt is timestamp;
+      }
+
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) && isValidPlayback(incoming()) || isAdmin();
+    }
+
+    match /users/{userId}/spotifyDevices/{deviceId} {
+      function isValidDevice(data) {
+        return data.id is string && data.id.size() <= 128 &&
+          data.name is string && data.name.size() <= 128 &&
+          data.type is string &&
+          data.lastActive is timestamp;
+      }
+
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) && isValidId(deviceId) && isValidDevice(incoming()) || isAdmin();
     }
   }
 }

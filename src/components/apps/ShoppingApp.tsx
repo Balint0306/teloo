@@ -85,8 +85,7 @@ export default function ShoppingApp({ onClose, user }: ShoppingAppProps) {
       })) as ShoppingItem[];
       setItems(docs);
     }, (err) => {
-      console.error(err);
-      showError("Hiba a tételek szinkronizálásakor.");
+      handleFirestoreError(err, OperationType.GET, `users/${user.uid}/shoppingLists/${activeListId}/items`);
     });
 
     return () => unsubscribe();
@@ -132,7 +131,7 @@ export default function ShoppingApp({ onClose, user }: ShoppingAppProps) {
         completed: !item.completed
       });
     } catch (err) {
-      showError("Módosítás nem menthető.");
+      handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}/shoppingLists/${activeListId}/items/${item.id}`);
     }
   };
 
@@ -155,7 +154,7 @@ export default function ShoppingApp({ onClose, user }: ShoppingAppProps) {
       }
       setShowListDeleteConfirm(null);
     } catch (err) {
-      showError("Rendszerhiba a lista törlésekor.");
+      handleFirestoreError(err, OperationType.DELETE, `users/${user.uid}/shoppingLists/${showListDeleteConfirm}`);
     }
   };
 

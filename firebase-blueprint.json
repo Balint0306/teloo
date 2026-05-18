@@ -46,12 +46,70 @@
         "uid",
         "email"
       ]
+    },
+    "CalendarEvent": {
+      "title": "Calendar Event",
+      "description": "An event in the user's calendar",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "time": {
+          "type": "string",
+          "pattern": "^\\d{2}:\\d{2}$"
+        },
+        "color": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "object",
+          "description": "Firestore Timestamp"
+        }
+      },
+      "required": [
+        "title",
+        "date",
+        "color",
+        "createdAt"
+      ]
     }
   },
   "firestore": {
     "users/{userId}": {
       "schema": "UserProfile",
       "description": "Storage for user profiles"
+    },
+    "users/{userId}/calendar/{eventId}": {
+      "schema": "CalendarEvent",
+      "description": "User's calendar events"
+    },
+    "users/{userId}/recipes/{recipeId}": {
+      "type": "object",
+      "description": "User's recipes"
+    },
+    "users/{userId}/notes/{noteId}": {
+      "type": "object",
+      "description": "User's notes"
+    },
+    "users/{userId}/passwords/{passwordId}": {
+      "type": "object",
+      "description": "User's stored passwords"
+    },
+    "users/{userId}/shoppingLists/{listId}": {
+      "type": "object",
+      "description": "User's shopping lists"
+    },
+    "users/{userId}/shoppingLists/{listId}/items/{itemId}": {
+      "type": "object",
+      "description": "Items in a shopping list"
     }
   }
 }

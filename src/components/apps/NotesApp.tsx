@@ -54,6 +54,8 @@ const NotesApp = ({ onClose, user }: { onClose: () => void, user: User | null })
       })) as Note[];
       setNotes(fetchedNotes);
       setLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, `users/${user.uid}/notes`);
     });
 
     return () => unsubscribe();

@@ -10,24 +10,28 @@ import { db } from '../../lib/firebase';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 const VISUAL_WHEEL_LABELS = [
-  "VÁGY", "ÉRINTÉS", "CSÓK", "PIKÁNS", "BŰNÖS", "TITOK", 
-  "MÁGIA", "TŰZ", "EXTRÉM", "LÁZ", "SUTTOGÁS", "JÁTÉK",
-  "VÁGY", "ÉRINTÉS", "CSÓK", "PIKÁNS", "BŰNÖS", "TITOK", 
-  "MÁGIA", "TŰZ", "EXTRÉM", "LÁZ", "SUTTOGÁS", "JÁTÉK",
-  "VÁGY", "ÉRINTÉS", "CSÓK", "PIKÁNS", "BŰNÖS", "TITOK", 
-  "MÁGIA", "TŰZ", "EXTRÉM", "LÁZ", "SUTTOGÁS", "JÁTÉK"
+  "VÁGY", "NYALÁS", "SZOPÁS", "DUGÁS", "BŰNÖS", "MOCSOK", 
+  "MÁMOR", "TŰZ", "EXTRÉM", "LÁZ", "SZORGOS", "JÁTÉK",
+  "VÁGY", "NYALÁS", "SZOPÁS", "DUGÁS", "BŰNÖS", "MOCSOK", 
+  "MÁMOR", "TŰZ", "EXTRÉM", "LÁZ", "SZORGOS", "JÁTÉK",
+  "VÁGY", "NYALÁS", "SZOPÁS", "DUGÁS", "BŰNÖS", "MOCSOK", 
+  "MÁMOR", "TŰZ", "EXTRÉM", "LÁZ", "SZORGOS", "JÁTÉK"
 ];
 
 const FlameApp = ({ onClose, user, profile }: { onClose: () => void; user: any; profile: any }) => {
   const [is18Verified, setIs18Verified] = useState(profile?.settings?.is18Verified || false);
   const [activeTab, setActiveTab] = useState<'wheel' | 'cards' | 'settings'>('wheel');
-  const [spiciness, setSpiciness] = useState<'soft' | 'spicy' | 'extreme'>('soft');
+  const [spiciness, setSpiciness] = useState<'extreme'>('extreme');
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [wheelResult, setWheelResult] = useState<string | null>(null);
   
   const [activeDeck, setActiveDeck] = useState<typeof FLAME_CONTENT.decks[0] | null>(null);
   const [currentCardContent, setCurrentCardContent] = useState<string | null>(null);
+  const [playerGenders, setPlayerGenders] = useState<{ 'Partner A': 'male' | 'female'; 'Partner B': 'male' | 'female' }>({
+    'Partner A': 'male',
+    'Partner B': 'female'
+  });
   const [currentPlayer, setCurrentPlayer] = useState<'Partner A' | 'Partner B'>('Partner A');
 
   const spinWheel = () => {
@@ -42,7 +46,12 @@ const FlameApp = ({ onClose, user, profile }: { onClose: () => void; user: any; 
     setTimeout(() => {
       setIsSpinning(false);
       // Pick a truly random task from the full database regardless of visual slice
-      const actualContent = FLAME_CONTENT.wheel[spiciness];
+      const gender = playerGenders[currentPlayer];
+      const actualContent = (FLAME_CONTENT.wheel[spiciness] as any)?.[gender] || [];
+      if (actualContent.length === 0) {
+        setWheelResult("Nincs elérhető feladat.");
+        return;
+      }
       const randomIndex = Math.floor(Math.random() * actualContent.length);
       setWheelResult(actualContent[randomIndex]);
     }, 3000);
@@ -50,9 +59,21 @@ const FlameApp = ({ onClose, user, profile }: { onClose: () => void; user: any; 
 
   const drawCard = (deck: typeof FLAME_CONTENT.decks[0]) => {
     setActiveDeck(deck);
-    const options = deck.content[spiciness];
+    const gender = playerGenders[currentPlayer];
+    const options = (deck.content[spiciness] as any)?.[gender] || [];
+    if (options.length === 0) {
+      setCurrentCardContent("Ehhez a szinthez nincs elérhető kártya.");
+      return;
+    }
     const randomLabel = options[Math.floor(Math.random() * options.length)];
     setCurrentCardContent(randomLabel);
+  };
+
+  const toggleGender = (player: 'Partner A' | 'Partner B') => {
+    setPlayerGenders(prev => ({
+      ...prev,
+      [player]: prev[player] === 'male' ? 'female' : 'male'
+    }));
   };
 
   const togglePlayer = () => {
@@ -129,33 +150,25 @@ const FlameApp = ({ onClose, user, profile }: { onClose: () => void; user: any; 
         <div className="flex items-center gap-3">
            <button 
              onClick={togglePlayer}
-             className="px-4 h-9 rounded-full bg-zinc-900 border border-white/5 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-rose-500"
+             className="px-4 h-9 rounded-full bg-zinc-900 border border-white/5 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white"
            >
-             <Users size={14} />
+             <Users size={14} className="text-rose-500" />
              {currentPlayer}
+             <span className="text-[8px] bg-white/10 px-2 py-0.5 rounded text-rose-400">
+               {playerGenders[currentPlayer] === 'male' ? 'FÉRFI' : 'NŐ'}
+             </span>
+           </button>
+           <button 
+             onClick={() => toggleGender(currentPlayer)}
+             className="w-9 h-9 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center text-rose-500 hover:bg-rose-500/10 transition-colors"
+             title="Nem váltása"
+           >
+             <RotateCw size={14} />
            </button>
            <button onClick={onClose} className="w-9 h-9 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center text-zinc-500">
             <X size={18} />
            </button>
         </div>
-      </div>
-
-      {/* SPICINESS SELECTOR */}
-      <div className="px-6 pb-4 flex items-center gap-2 z-20 shrink-0">
-        {(['soft', 'spicy', 'extreme'] as const).map((level) => (
-          <button
-            key={level}
-            onClick={() => setSpiciness(level)}
-            className={`flex-1 py-4 rounded-2xl text-[9px] font-black uppercase tracking-widest border transition-all flex flex-col items-center gap-1 ${
-              spiciness === level 
-                ? 'bg-rose-500/10 border-rose-500 text-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.1)]' 
-                : 'bg-zinc-900/50 border-white/5 text-zinc-500 hover:text-zinc-300'
-            }`}
-          >
-            <Flame size={12} className={level === 'extreme' ? 'text-rose-600' : level === 'spicy' ? 'text-orange-500' : 'text-blue-400'} fill={spiciness === level ? 'currentColor' : 'none'} />
-            {level === 'soft' ? 'Könnyű' : level === 'spicy' ? 'Pikáns' : 'Extrém'}
-          </button>
-        ))}
       </div>
 
       {/* TABS */}
@@ -280,7 +293,7 @@ const FlameApp = ({ onClose, user, profile }: { onClose: () => void; user: any; 
                          <Sparkles size={24} className="text-white" />}
                       </div>
                       <h3 className="text-2xl font-black italic">{deck.name}</h3>
-                      <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">{deck.content[spiciness].length} feladat érhető el</p>
+                      <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">{((deck.content[spiciness] as any)[playerGenders[currentPlayer]]?.length || 0)} feladat érhető el</p>
                     </div>
                     <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-40 transition-opacity">
                       {deck.icon === 'Heart' ? <Heart size={80} strokeWidth={1} /> : 

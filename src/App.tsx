@@ -8,7 +8,7 @@ import {
   ChevronLeft, Home as HomeIcon,
   User as UserIcon, LogOut, Mail, Lock, 
   ArrowRight, Key, Cloud, FileText,
-  Calendar, ShieldCheck, ShoppingCart, ChefHat, Heart
+  Calendar, ShieldCheck, ShoppingCart, ChefHat, Heart, Shield
 } from 'lucide-react';
 import { 
   auth, 
@@ -32,6 +32,7 @@ import PasswordsApp from './components/apps/PasswordsApp';
 import ShoppingApp from './components/apps/ShoppingApp';
 import RecipeApp from './components/apps/RecipeApp';
 import FlameApp from './components/apps/FlameApp';
+import AdminApp from './components/apps/AdminApp';
 
 // Components
 const StatusBar = ({ isAppActive }: { isAppActive: boolean }) => {
@@ -73,6 +74,7 @@ const Icon = ({ name, size = 24 }: { name: string, size?: number }) => {
     case 'ShoppingCart': return <ShoppingCart size={size} />;
     case 'ChefHat': return <ChefHat size={size} />;
     case 'Heart': return <Heart size={size} />;
+    case 'Shield': return <Shield size={size} />;
     default: return <SettingsIcon size={size} />;
   }
 };
@@ -84,6 +86,11 @@ export default function App() {
   const [activeApp, setActiveApp] = useState<AppInfo | null>(null);
   const [showPlayStore, setShowPlayStore] = useState(false);
   const [isHomeBarHidden, setIsHomeBarHidden] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [isAdminAuthModalOpen, setIsAdminAuthModalOpen] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminAuthError, setAdminAuthError] = useState('');
+  const [pendingAdminApp, setPendingAdminApp] = useState<AppInfo | null>(null);
   
   // Auth Form State
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
@@ -175,6 +182,14 @@ export default function App() {
 
   const installApp = async (appId: string) => {
     if (!user || !profile) return;
+
+    // Admin app password check
+    if (appId === 'admin') {
+      setPendingAdminApp(AVAILABLE_APPS.find(a => a.id === 'admin') || null);
+      setIsAdminAuthModalOpen(true);
+      return;
+    }
+
     const userPath = `users/${user.uid}`;
     const userRef = doc(db, userPath);
     const updatedIds = [...profile.installedAppIds];
@@ -200,6 +215,41 @@ export default function App() {
     }
   };
 
+  const handleAdminAuth = async () => {
+    if (adminPassword === 'admin123') {
+      if (user && profile) {
+        const userPath = `users/${user.uid}`;
+        const userRef = doc(db, userPath);
+        
+        // Update Firestore to grant admin status according to security rules
+        try {
+          await updateDoc(userRef, { isAdmin: true });
+        } catch (error) {
+          console.error("Failed to set admin status:", error);
+        }
+
+        // Also add to installed apps if not present
+        if (pendingAdminApp) {
+          const updatedIds = [...profile.installedAppIds];
+          if (!updatedIds.includes(pendingAdminApp.id)) {
+            updatedIds.push(pendingAdminApp.id);
+            try {
+              await updateDoc(userRef, { installedAppIds: updatedIds });
+            } catch (error) {
+              handleFirestoreError(error, OperationType.UPDATE, userPath);
+            }
+          }
+        }
+      }
+      setIsAdminAuthModalOpen(false);
+      setAdminPassword('');
+      setAdminAuthError('');
+      setPendingAdminApp(null);
+    } else {
+      setAdminAuthError('Hibás jelszó!');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-black text-white font-sans">
@@ -218,6 +268,17 @@ export default function App() {
     ...SYSTEM_APPS.filter(app => app.id !== 'playstore'),
     ...AVAILABLE_APPS.filter(app => profile?.installedAppIds.includes(app.id))
   ];
+
+  const allVisibleAppsList = [
+    { id: 'playstore', name: 'Áruház', icon: 'ShoppingBag', color: 'bg-white', isSpecial: true },
+    ...allVisibleApps
+  ];
+
+  const APPS_PER_PAGE = 20; // 4x5 grid
+  const pages = [];
+  for (let i = 0; i < allVisibleAppsList.length; i += APPS_PER_PAGE) {
+    pages.push(allVisibleAppsList.slice(i, i + APPS_PER_PAGE));
+  }
 
   const isAppActive = !!activeApp || showPlayStore;
 
@@ -374,6 +435,8 @@ export default function App() {
                   <RecipeApp onClose={() => setActiveApp(null)} user={user} />
                 ) : activeApp.id === 'flame' ? (
                   <FlameApp onClose={() => setActiveApp(null)} user={user} profile={profile} />
+                ) : activeApp.id === 'admin' ? (
+                  <AdminApp onClose={() => setActiveApp(null)} currentUser={user} />
                 ) : (
                   <>
                     <div className="p-6 md:p-8 flex items-center justify-between border-b border-zinc-50">
@@ -478,54 +541,150 @@ export default function App() {
                 key="home"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="flex-1 flex flex-col p-6 md:p-12 h-full relative"
+                className="flex-1 flex flex-col h-full relative"
               >
-                <div className="relative z-10 flex flex-col h-full bg-transparent">
-                  <div className="flex-1 mt-24 md:mt-28 bg-transparent overflow-y-auto no-scrollbar pb-32">
-                    <div className="max-w-5xl mx-auto px-4">
-                      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-x-4 gap-y-10 focus:outline-none">
-                        <motion.div 
-                          whileHover={{ y: -3 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => setShowPlayStore(true)}
-                          className="flex flex-col items-center gap-2 cursor-pointer group"
-                        >
-                          <div className="w-[54px] h-[54px] md:w-[64px] md:h-[64px] bg-white rounded-2xl md:rounded-[24px] flex items-center justify-center shadow-lg ring-1 ring-white/10 relative">
-                            <ShoppingBag className="text-blue-500" size={30} strokeWidth={2.5} />
-                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-zinc-900" />
+                <div className="relative z-10 flex flex-col h-full bg-transparent overflow-hidden">
+                  <motion.div 
+                    className="flex-1 mt-24 md:mt-28 flex touch-none"
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.2}
+                    onDragEnd={(_, info) => {
+                      const threshold = 50;
+                      if (info.offset.x < -threshold && currentPage < pages.length - 1) {
+                        setCurrentPage(prev => prev + 1);
+                      } else if (info.offset.x > threshold && currentPage > 0) {
+                        setCurrentPage(prev => prev - 1);
+                      }
+                    }}
+                  >
+                    {pages.map((pageApps, pageIdx) => (
+                      <motion.div
+                        key={pageIdx}
+                        className="min-w-full h-full px-6 md:px-12 flex flex-col"
+                        animate={{ x: `-${currentPage * 100}%` }}
+                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                      >
+                        <div className="max-w-5xl mx-auto w-full">
+                          <div className="grid grid-cols-4 gap-x-4 gap-y-10 focus:outline-none">
+                            {pageApps.map((app: any) => (
+                              <motion.div 
+                                key={app.id} 
+                                whileHover={{ y: -3 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => {
+                                  if ('isSpecial' in app && app.id === 'playstore') {
+                                    setShowPlayStore(true);
+                                  } else {
+                                    setActiveApp(app);
+                                  }
+                                }}
+                                className="flex flex-col items-center gap-2 cursor-pointer group"
+                              >
+                                <motion.div 
+                                  layoutId={app.id === 'playstore' ? undefined : `app-icon-${app.id}`}
+                                  className={`w-[54px] h-[54px] md:w-[64px] md:h-[64px] ${app.color || 'bg-white'} rounded-2xl md:rounded-[24px] flex items-center justify-center shadow-lg ring-1 ring-white/10 overflow-hidden relative`}
+                                >
+                                  {app.id === 'playstore' ? (
+                                    <>
+                                      <ShoppingBag className="text-blue-500" size={30} strokeWidth={2.5} />
+                                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-zinc-900" />
+                                    </>
+                                  ) : app.customIconUrl ? (
+                                    <img src={app.customIconUrl} alt={app.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <Icon name={app.icon} size={30} />
+                                  )}
+                                </motion.div>
+                                <span className="text-[11px] md:text-[12px] text-white font-medium text-shadow text-center truncate w-full px-1">{app.name}</span>
+                              </motion.div>
+                            ))}
                           </div>
-                          <span className="text-[11px] md:text-[12px] text-white font-medium text-shadow text-center">Áruház</span>
-                        </motion.div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </motion.div>
 
-                        {allVisibleApps.map(app => (
-                          <motion.div 
-                            key={app.id} 
-                            whileHover={{ y: -3 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setActiveApp(app)}
-                            className="flex flex-col items-center gap-2 cursor-pointer group"
-                          >
-                            <motion.div 
-                              layoutId={`app-icon-${app.id}`}
-                              className={`w-[54px] h-[54px] md:w-[64px] md:h-[64px] ${app.color} rounded-2xl md:rounded-[24px] flex items-center justify-center shadow-lg ring-1 ring-white/10 overflow-hidden`}
-                            >
-                              {app.customIconUrl ? (
-                                <img src={app.customIconUrl} alt={app.name} className="w-full h-full object-cover" />
-                              ) : (
-                                <Icon name={app.icon} size={30} />
-                              )}
-                            </motion.div>
-                            <span className="text-[11px] md:text-[12px] text-white font-medium text-shadow text-center truncate w-full px-1">{app.name}</span>
-                          </motion.div>
-                        ))}
-                      </div>
+                  {/* Page Indicators */}
+                  {pages.length > 1 && (
+                    <div className="flex justify-center gap-2 mb-36 relative z-20">
+                      {pages.map((_, idx) => (
+                        <div 
+                          key={idx}
+                          className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                            currentPage === idx ? 'bg-white scale-125' : 'bg-white/30'
+                          }`}
+                        />
+                      ))}
                     </div>
-                  </div>
+                  )}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
+
+        {/* Admin Auth Modal */}
+        <AnimatePresence>
+          {isAdminAuthModalOpen && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="w-full max-w-sm bg-neutral-900 border border-white/10 rounded-[40px] p-10 shadow-2xl"
+              >
+                <div className="flex flex-col items-center text-center space-y-6">
+                  <div className="w-20 h-20 bg-amber-500/10 rounded-[28px] flex items-center justify-center border border-amber-500/30">
+                    <Shield className="text-amber-500" size={40} />
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className="text-2xl font-black tracking-tight">Adminhozzáférés</h2>
+                    <p className="text-zinc-500 text-sm font-medium italic">Add meg a titkos jelszót a telepítéshez</p>
+                  </div>
+                  
+                  <div className="w-full space-y-4">
+                    <div className="relative">
+                      <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
+                      <input 
+                        type="password" 
+                        value={adminPassword}
+                        onChange={(e) => setAdminPassword(e.target.value)}
+                        placeholder="Admin Jelszó"
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 outline-none focus:ring-2 focus:ring-amber-500 transition-all text-sm font-bold"
+                        onKeyDown={(e) => e.key === 'Enter' && handleAdminAuth()}
+                        autoFocus
+                      />
+                    </div>
+                    {adminAuthError && (
+                      <p className="text-red-500 text-xs font-bold animate-shake">{adminAuthError}</p>
+                    )}
+                  </div>
+
+                  <div className="flex w-full gap-3 pt-4">
+                    <button 
+                      onClick={() => {
+                        setIsAdminAuthModalOpen(false);
+                        setAdminPassword('');
+                        setAdminAuthError('');
+                        setPendingAdminApp(null);
+                      }}
+                      className="flex-1 bg-white/5 hover:bg-white/10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all"
+                    >
+                      Mégse
+                    </button>
+                    <button 
+                      onClick={handleAdminAuth}
+                      className="flex-1 bg-amber-500 hover:bg-amber-400 text-black py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-amber-500/20"
+                    >
+                      Belépés
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* Unified Navigation Dock & Home Bar Indicator */}
         <div className="fixed bottom-0 left-0 right-0 z-[70] flex flex-col items-center pb-1 pointer-events-none">

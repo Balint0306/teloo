@@ -109,11 +109,11 @@ export const AVAILABLE_APPS: AppInfo[] = [
   {
     id: 'flame',
     name: 'Flame',
-    icon: 'Heart',
-    color: 'bg-gradient-to-br from-rose-500 to-orange-500 text-white',
+    icon: 'Flame',
+    color: 'bg-gradient-to-br from-rose-600 to-orange-600 text-white',
     category: 'Games',
     description: 'Páros játékok és izgalmak (18+)',
-    customIconUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/74/TinderLogo-2017.svg'
+    customIconUrl: 'https://cdn-icons-png.flaticon.com/512/785/785116.png'
   },
   {
     id: 'facebook',
@@ -130,5 +130,13 @@ export const AVAILABLE_APPS: AppInfo[] = [
     color: 'bg-white text-blue-600',
     category: 'Tool',
     description: 'Böngészés'
+  },
+  {
+    id: 'admin',
+    name: 'Admin',
+    icon: 'Shield',
+    color: 'bg-zinc-900 text-amber-500',
+    category: 'System',
+    description: 'Rendszer felügyelet (Jelszó szükséges)',
   }
 ];
